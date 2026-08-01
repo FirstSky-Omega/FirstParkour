@@ -26,3 +26,6 @@ hs_err_pid*
 target/
 IP.iml
 .claude/
+node_modules/
+docs/.vitepress/cache/
+docs/.vitepress/dist/
