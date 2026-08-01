@@ -1,15 +1,21 @@
-name: 'IP'
-description: '无尽跑酷 (originally made by Efnilite, Paper 26 port by Creeper_可能c)'
-author: Creeper_可能c (aka. Maybe__c), Efnilite
-version: 5.4.0-paper26
-# Paper 26.1.2 maps to MC 1.21.11 — older folia/spigot servers will refuse to load this jar.
-api-version: '1.21'
+name: IP
+description: Unified block and elytra infinite parkour
+author: Creeper_可能c (aka. Maybe__c)
+contributors: [Efnilite]
+version: '${project.version}'
+api-version: '1.21.11'
 main: dev.efnilite.ip.IP
-# VoidGen was removed: vilib ships its own ChunkGenerator (dev.efnilite.vilib.util.VoidGenerator)
-# so no external plugin is required to create a flat void world.
-softdepend: [floodgate, Vault, PlaceholderAPI, Multiverse-Core]
+softdepend: [floodgate, Vault, PlaceholderAPI, Multiverse-Core, HolographicDisplays, Chunky]
 commands:
-    witp:
-        aliases: [parkour, ip]
-        usage: /<command> [arguments]
-        description: Main command for Infinite Parkour
+  witp:
+    aliases: [parkour, ip]
+    usage: /<command> [arguments]
+    description: Main command for Infinite Parkour
+  ipp:
+    aliases: [ipplus]
+    usage: /<command> [arguments]
+    description: Compatibility command for the former IPPlus features
+  iep:
+    aliases: [infiniteelytraparkour]
+    usage: /<command> [arguments]
+    description: Elytra parkour command

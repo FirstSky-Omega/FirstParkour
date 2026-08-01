@@ -2,8 +2,10 @@ package dev.efnilite.ip.api.event;
 
 import dev.efnilite.ip.generator.ParkourGenerator;
 import dev.efnilite.ip.player.ParkourPlayer;
-import dev.efnilite.vilib.event.EventWrapper;
+import dev.efnilite.ip.foundation.event.EventWrapper;
 import org.bukkit.block.Block;
+import org.bukkit.event.HandlerList;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -15,6 +17,8 @@ import java.util.List;
  */
 public class ParkourBlockGenerateEvent extends EventWrapper {
 
+    private static final HandlerList HANDLERS = new HandlerList();
+
     public final List<Block> blocks;
     public final ParkourGenerator generator;
     public final ParkourPlayer player;
@@ -23,5 +27,14 @@ public class ParkourBlockGenerateEvent extends EventWrapper {
         this.blocks = blocks;
         this.generator = generator;
         this.player = player;
+    }
+
+    @Override
+    public @NotNull HandlerList getHandlers() {
+        return HANDLERS;
+    }
+
+    public static HandlerList getHandlerList() {
+        return HANDLERS;
     }
 }

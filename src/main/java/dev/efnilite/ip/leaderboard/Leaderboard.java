@@ -3,7 +3,7 @@ package dev.efnilite.ip.leaderboard;
 import dev.efnilite.ip.IP;
 import dev.efnilite.ip.config.Config;
 import dev.efnilite.ip.storage.Storage;
-import dev.efnilite.vilib.util.Task;
+import dev.efnilite.ip.foundation.util.Task;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

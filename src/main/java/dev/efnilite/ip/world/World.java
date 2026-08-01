@@ -2,7 +2,7 @@ package dev.efnilite.ip.world;
 
 import dev.efnilite.ip.IP;
 import dev.efnilite.ip.config.Config;
-import dev.efnilite.vilib.util.VoidGenerator;
+import dev.efnilite.ip.foundation.util.VoidGenerator;
 import net.kyori.adventure.text.Component;
 import org.bukkit.*;
 

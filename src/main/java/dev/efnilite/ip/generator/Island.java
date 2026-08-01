@@ -3,7 +3,7 @@ package dev.efnilite.ip.generator;
 import dev.efnilite.ip.IP;
 import dev.efnilite.ip.config.Config;
 import dev.efnilite.ip.session.Session;
-import dev.efnilite.vilib.schematic.Schematic;
+import dev.efnilite.ip.foundation.schematic.Schematic;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;

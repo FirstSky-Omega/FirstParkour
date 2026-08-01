@@ -5,7 +5,7 @@ import dev.efnilite.ip.api.event.ParkourSpectateEvent;
 import dev.efnilite.ip.config.Locales;
 import dev.efnilite.ip.player.data.PreviousData;
 import dev.efnilite.ip.session.Session;
-import dev.efnilite.vilib.util.Task;
+import dev.efnilite.ip.foundation.util.Task;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;

@@ -2,7 +2,7 @@ package dev.efnilite.ip.hologram;
 
 import dev.efnilite.ip.IP;
 import dev.efnilite.ip.hologram.HologramConfig.Entry;
-import dev.efnilite.vilib.util.Task;
+import dev.efnilite.ip.foundation.util.Task;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.entity.Entity;

@@ -1,0 +1,186 @@
+# Dutch (en)
+# by Efnilite
+
+go back:
+  material: "arrow"
+  name: "<white><bold>Ga terug"
+  lore: ""
+
+hotbar:
+  play:
+    material: "sugar_cane"
+    name: "<#2fb900><bold>Spelen"
+    lore: ""
+
+  settings:
+    material: "comparator"
+    name: "<#c10000><bold>Instellingen"
+    lore: ""
+
+  leaderboards:
+    material: "spruce_hanging_sign"
+    name: "<white><bold>Leaderboards"
+    lore: ""
+
+  leave:
+    material: "barrier"
+    name: "<#b32400><bold>Verlaten"
+    lore: ""
+
+play:
+  title: "Play"
+
+modes:
+  default:
+    material: "barrel"
+    name: "<white><bold>Standaard"
+    lore: ""
+
+    title: "Standaard"
+
+  close:
+    material: "pink_petals"
+    name: "<#fa9abc><bold>Close"
+    lore: "<gray>Blijf dicht bij de blokken."
+
+    title: "Close"
+
+  min speed:
+    material: "feather"
+    name: "<white><bold>Minimale snelheid"
+    lore: "<gray>Nadat je de minimale snelheid hebt gehaald,||<gray>zorgt langzamer gaan voor een reset."
+
+    title: "Minimale snelheid"
+
+  obstacle:
+    material: "oak_fence"
+    name: "<#c49402><bold>Obstakel"
+    lore: "<gray>Sommige obstakels."
+
+    title: "Obstakel"
+
+  speed demon:
+    material: "splash_potion"
+    name: "<#cc3399><bold>Speed Demon"
+    lore: "<gray>Ga zo snel mogelijk."
+
+    title: "Speed Demon"
+
+  time trial:
+    material: "clock"
+    name: "<#ddd200><bold>Time Trial"
+    lore: "<gray>Haal een bepaalde score||<gray>zo snel mogelijk."
+
+    title: "Time Trial"
+
+styles:
+  title: "Stijlen"
+
+  style:
+    material: ""
+    name: "<white><bold>%a"
+    lore: "<gray>Type <white>%b"
+
+  random:
+    material: ""
+    name: "<white><bold>Willekeurig"
+    lore: ""
+
+settings:
+  title: "Instellingen"
+
+  enabled:
+    material: "green_stained_glass_pane"
+    name: "<#00ff00>"
+    lore: "<#0DCB07><bold>✔"
+
+  disabled:
+    material: "red_stained_glass_pane"
+    name: "<red>"
+    lore: "<red><bold>✘"
+
+  styles:
+    material: ""
+    name: "<#8c0000><bold>Stijl"
+    lore: "<gray>Geselecteerd <white>%a||<gray>Klik om de stijl te veranderen."
+
+  radius:
+    material: "blaze_powder"
+    name: "<#ff9900><bold>Radius"
+    lore: "<gray>Geselecteerd <white>%a||<gray>Klik om de (cirkel)radius te veranderen."
+
+  time:
+    material: "clock"
+    name: "<#ffff00><bold>Tijd"
+    lore: "<gray>Geselecteerd <white>%a||<gray>Klik om de tijd te veranderen."
+
+  seed:
+    material: "wheat_seeds"
+    name: "<#00ff00><bold>Seed"
+    lore: "<gray>Geselecteerd <white>%a||<gray>Gebruik <white>/iep seed <seed><gray> om de seed in te stellen.||<gray>Als je terug wil naar random seeds, dan moet je op dit item klikken."
+
+    random: "willekeurig"
+    set: "<gray>De seed is naar <white>%a <gray>ingesteld."
+    invalid: "<white>%a <gray>is geen nummer."
+
+  fall:
+    material: ""
+    name: "<bold>Val"
+    lore: "<gray>Geselecteerd <white>%a||<gray>Klik om het valbericht te veranderen."
+
+  info:
+    material: ""
+    name: "<bold>Info"
+    lore: "<gray>Geselecteerd <white>%a||<gray>Klik om extra info te zien."
+
+  metric:
+    material: ""
+    name: "<bold>Gebruik km/h"
+    lore: "<gray>Geselecteerd <white>%a||<gray>Klik om het meetstelsel te veranderen."
+
+  locale:
+    material: "paper"
+    name: "<white><bold>Taal"
+    lore: "<gray>Geselecteerd <white>%a||<gray>Klik om de taal te veranderen."
+
+leaderboards:
+  title: "Leaderboards"
+
+  head:
+    material: "player_head"
+    name: "<white><bold>#%s - %s"
+    lore: "<gray>Score <white>%s||<gray>Tijd <white>%s||<gray>Seed <white>%s"
+
+  sort:
+    material: "bookshelf"
+    name: "<#DEA11F><bold>Gesorteerd op %s"
+    lore: ""
+    values:
+      - "score"
+      - "tijd"
+
+reset:
+  reasons:
+    flying: "Je bent gereset omdat je niet aan het vliegen was."
+    bounds: "Je bent gereset omdat je buiten de grenzen ging."
+    speed: "Je bent gereset omdat je te langzaam ging."
+
+  lines:
+    - ""
+    - "<gray>Score <white>%score%"
+    - "<gray>High-score <white>%high-score%"
+    - "<gray>Tijd <white>%time%"
+    - "<gray>Seed <white>%seed%"
+    - "<gray>%reason%"
+
+scoreboard:
+  title: "<gradient:#4800FF:#B200FF><bold>IEP</gradient>"
+
+  lines:
+    - ""
+    - "<#7700FF><bold>Score</bold> <gray>%score%"
+    - "<#7700FF><bold>High-score</bold> <gray>%high-score%"
+    - "<#7700FF><bold>Tijd</bold> <gray>%time%"
+    - "<#7700FF><bold>Seed</bold> <gray>%seed%"
+    - ""
+    - "<#505050>server.ip"

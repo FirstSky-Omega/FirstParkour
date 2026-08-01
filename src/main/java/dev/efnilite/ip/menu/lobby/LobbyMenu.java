@@ -7,8 +7,8 @@ import dev.efnilite.ip.menu.ParkourOption;
 import dev.efnilite.ip.player.ParkourPlayer;
 import dev.efnilite.ip.player.ParkourUser;
 import dev.efnilite.ip.session.Session;
-import dev.efnilite.vilib.inventory.Menu;
-import dev.efnilite.vilib.inventory.item.SliderItem;
+import dev.efnilite.ip.foundation.inventory.Menu;
+import dev.efnilite.ip.foundation.inventory.item.SliderItem;
 import org.bukkit.entity.Player;
 
 import java.util.List;

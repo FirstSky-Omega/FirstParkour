@@ -6,7 +6,7 @@ import dev.efnilite.ip.generator.ParkourGenerator;
 import dev.efnilite.ip.leaderboard.Leaderboard;
 import dev.efnilite.ip.player.ParkourPlayer;
 import dev.efnilite.ip.session.Session;
-import dev.efnilite.vilib.inventory.item.Item;
+import dev.efnilite.ip.foundation.inventory.item.Item;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

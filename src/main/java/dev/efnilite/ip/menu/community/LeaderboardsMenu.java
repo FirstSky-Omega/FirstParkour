@@ -8,9 +8,9 @@ import dev.efnilite.ip.menu.Menus;
 import dev.efnilite.ip.menu.ParkourOption;
 import dev.efnilite.ip.mode.Mode;
 import dev.efnilite.ip.player.ParkourUser;
-import dev.efnilite.vilib.inventory.PagedMenu;
-import dev.efnilite.vilib.inventory.item.Item;
-import dev.efnilite.vilib.inventory.item.MenuItem;
+import dev.efnilite.ip.foundation.inventory.PagedMenu;
+import dev.efnilite.ip.foundation.inventory.item.Item;
+import dev.efnilite.ip.foundation.inventory.item.MenuItem;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 

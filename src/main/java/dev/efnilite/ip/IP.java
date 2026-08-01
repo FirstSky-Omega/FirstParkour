@@ -1,35 +1,44 @@
 package dev.efnilite.ip;
 
 import dev.efnilite.ip.api.Registry;
+import dev.efnilite.ip.api.ServerIntegration;
 import dev.efnilite.ip.config.Config;
 import dev.efnilite.ip.hologram.HologramManager;
 import dev.efnilite.ip.hook.HoloHook;
 import dev.efnilite.ip.hook.PAPIHook;
+import dev.efnilite.ip.integration.IntegrationLoader;
 import dev.efnilite.ip.mode.DefaultMode;
 import dev.efnilite.ip.mode.Modes;
 import dev.efnilite.ip.mode.SpectatorMode;
+import dev.efnilite.ip.migration.LegacyDataMigrator;
 import dev.efnilite.ip.player.ParkourUser;
 import dev.efnilite.ip.storage.Storage;
 import dev.efnilite.ip.world.Divider;
 import dev.efnilite.ip.world.World;
-import dev.efnilite.vilib.ViPlugin;
-import dev.efnilite.vilib.inventory.Menu;
-import dev.efnilite.vilib.util.Logging;
-import dev.efnilite.vilib.util.UpdateChecker;
-import dev.efnilite.vilib.util.VoidGenerator;
+import dev.efnilite.iep.IEP;
+import dev.efnilite.ipp.IPP;
+import dev.efnilite.ip.foundation.ParkourPlugin;
+import dev.efnilite.ip.foundation.inventory.Menu;
+import dev.efnilite.ip.foundation.util.Logging;
+import dev.efnilite.ip.foundation.util.UpdateChecker;
+import dev.efnilite.ip.foundation.util.VoidGenerator;
 import org.bukkit.generator.ChunkGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.util.List;
 
-public final class IP extends ViPlugin {
+public final class IP extends ParkourPlugin {
 
     public static final String NAME = "<#FF6464><bold>Infinite Parkour<reset>";
     public static final String PREFIX = NAME + " <dark_gray>» <gray>";
 
     private static Logging logging;
     private static IP instance;
+    private boolean plusEnabled;
+    private boolean elytraEnabled;
+    private List<ServerIntegration> serverIntegrations = List.of();
 
     @Nullable
     private static PAPIHook placeholderHook;
@@ -78,6 +87,7 @@ public final class IP extends ViPlugin {
 
         // ----- Configurations -----
 
+        LegacyDataMigrator.migrate(this);
         Config.reload(true);
 
         // ----- Registry -----
@@ -116,6 +126,22 @@ public final class IP extends ViPlugin {
         registerListener(new Events());
         registerCommand("ip", new Command());
 
+        try {
+            IPP.enable(this);
+            plusEnabled = true;
+        } catch (Throwable t) {
+            logging.stack("Failed to enable the former IPPlus modes", t);
+        }
+
+        try {
+            IEP.INSTANCE.enable(this);
+            elytraEnabled = true;
+        } catch (Throwable t) {
+            logging.stack("Failed to enable elytra parkour", t);
+        }
+
+        serverIntegrations = IntegrationLoader.enable(this);
+
         // Built-in hologram leaderboards — replaces DH/HD softdepend on Paper 26.
         // Uses TextDisplay + Interaction (Display API) so there's no armor-stand
         // entity holding chunks open. Initialized after Events so PAPI placeholder
@@ -126,16 +152,13 @@ public final class IP extends ViPlugin {
             logging.stack("Failed to enable the hologram subsystem — continuing without holograms", t);
         }
 
-        UpdateChecker.check(this, 87226);
+        UpdateChecker.check(this, 136046);
     }
 
     /**
-     * Exposes our void {@link ChunkGenerator} to the rest of the server, so users can
+     * Exposes the built-in void {@link ChunkGenerator} to the rest of the server. Users can
      * create void worlds with e.g. {@code /mv create hub normal -g IP} or by setting
-     * {@code generator: IP} in bukkit.yml — exactly the way the now-deprecated
-     * <a href="https://www.spigotmc.org/resources/voidgen.27039/">VoidGen</a> plugin used
-     * to be used. With this we drop VoidGen as a hard requirement for any other void world
-     * on the server, not just IP's own parkour world.
+     * {@code generator: IP} in bukkit.yml, without installing a separate generator plugin.
      *
      * <p>Returns a generator that produces empty chunks (no noise, no surface, no caves,
      * no bedrock, no decorations, no mobs, no structures). Same implementation IP uses
@@ -163,6 +186,30 @@ public final class IP extends ViPlugin {
         }
 
         try {
+            IntegrationLoader.disable(this, serverIntegrations);
+            serverIntegrations = List.of();
+
+            if (placeholderHook != null) {
+                placeholderHook.unregister();
+                placeholderHook = null;
+            }
+
+            if (elytraEnabled) {
+                try {
+                    IEP.INSTANCE.disable();
+                } catch (Throwable t) {
+                    logging.stack("Error while disabling elytra parkour", t);
+                }
+            }
+
+            if (plusEnabled) {
+                try {
+                    IPP.disable();
+                } catch (Throwable t) {
+                    logging.stack("Error while disabling the former IPPlus modes", t);
+                }
+            }
+
             for (ParkourUser user : ParkourUser.getUsers()) {
                 try {
                     ParkourUser.leave(user);

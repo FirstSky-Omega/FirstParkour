@@ -1,11 +1,57 @@
-<div align="center">
-<h3>Infinite Parkour Reborn</h3>
-<strong>
-<a href="https://efnilite.dev/projects/ip/wiki">Wiki</a> </strong>
-<br><br>
-</div>
+# Infinite Parkour Reborn
 
-Welcome to the Infinite Parkour Reborn repo.
-Sorry I'm quite busy IRL and almost put my full life on my CreeperFamily server, so I don't have much time to add lower server versions support or add new feature.
+Infinite Parkour Reborn is the community-maintained continuation of Efnilite's
+Infinite Parkour family. Version 6 combines the former Infinite Parkour, IPPlus,
+and Infinite Elytra Parkour projects into one plugin and one data directory.
 
-~~Originally by Efnilite~~
+## Supported servers
+
+The public build deliberately has a narrow support window:
+
+- Paper 1.21.11 on Java 21
+- Paper 26.1.2 on Java 25
+- Paper 26.2 on Java 25
+
+Spigot, Folia, older Minecraft releases, and unofficial forks are not supported.
+The public project is maintained for compatibility and bug fixes; it does not
+promise a continuing stream of new features.
+
+## Installation
+
+1. Stop the server.
+2. Remove the old IP, IPPlus, and IEP jars.
+3. Put the single Infinite Parkour Reborn jar in `plugins/`.
+4. Start the server.
+
+The plugin copies missing files from the old `plugins/IPPlus` and `plugins/IEP`
+folders into `plugins/IP/plus` and `plugins/IP/elytra`. The old folders are not
+deleted. See [MIGRATION.md](MIGRATION.md) before removing them manually.
+
+Commands from the former plugins remain available through `/ipp` and `/iep`.
+The main command is `/witp`, with `/parkour` and `/ip` as aliases.
+
+## Building
+
+The default build targets Paper 1.21.11 and emits Java 21 bytecode:
+
+```powershell
+.\mvnw.cmd -B clean verify
+```
+
+Other supported API baselines can be checked without editing the POM:
+
+```powershell
+.\mvnw.cmd -B clean verify -Dpaper.version=26.1.2.build.74-stable
+.\mvnw.cmd -B clean verify -Dpaper.version=26.2.build.84-stable
+```
+
+The shaded plugin jar is written to `target/IP-6.0.0-SNAPSHOT.jar`.
+
+## Development policy
+
+Public compatibility fixes and generally useful bug fixes belong here. Private
+server behavior belongs in a separate overlay that implements `ServerIntegration`;
+see [docs/SERVER_INTEGRATIONS.md](docs/SERVER_INTEGRATIONS.md).
+
+This project is licensed under GPL-3.0. See [NOTICE.md](NOTICE.md) for upstream
+attribution.

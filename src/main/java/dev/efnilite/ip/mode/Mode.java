@@ -1,7 +1,7 @@
 package dev.efnilite.ip.mode;
 
 import dev.efnilite.ip.leaderboard.Leaderboard;
-import dev.efnilite.vilib.inventory.item.Item;
+import dev.efnilite.ip.foundation.inventory.item.Item;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

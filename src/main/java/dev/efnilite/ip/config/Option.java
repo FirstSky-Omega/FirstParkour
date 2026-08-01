@@ -5,7 +5,7 @@ import dev.efnilite.ip.api.Registry;
 import dev.efnilite.ip.menu.ParkourOption;
 import dev.efnilite.ip.style.RandomStyle;
 import dev.efnilite.ip.style.Style;
-import dev.efnilite.vilib.particle.ParticleData;
+import dev.efnilite.ip.foundation.particle.ParticleData;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.file.FileConfiguration;
