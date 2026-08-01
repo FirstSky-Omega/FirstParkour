@@ -1,0 +1,20 @@
+:root {
+  --vp-c-brand-1: #7c3aed;
+  --vp-c-brand-2: #8b5cf6;
+  --vp-c-brand-3: #6d28d9;
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: linear-gradient(120deg, #ef4444 10%, #8b5cf6 70%);
+  --vp-home-hero-image-background-image: linear-gradient(135deg, rgba(239, 68, 68, .30), rgba(124, 58, 237, .35));
+  --vp-home-hero-image-filter: blur(56px);
+}
+
+.VPHomeHero .VPImage {
+  max-width: 300px;
+  max-height: 300px;
+  border-radius: 24px;
+}
+
+.vp-doc table {
+  display: table;
+  width: 100%;
+}

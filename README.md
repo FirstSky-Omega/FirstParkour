@@ -28,6 +28,12 @@ deleted. See [MIGRATION.md](MIGRATION.md) before removing them manually.
 Commands from the former plugins remain available through `/ipp` and `/iep`.
 The main command is `/witp`, with `/parkour` and `/ip` as aliases.
 
+## Documentation
+
+Installation, migration, commands, permissions, configuration, placeholders,
+and developer API documentation are available at
+[lostumbrella58.github.io/IP-Reborn](https://lostumbrella58.github.io/IP-Reborn/).
+
 ## Building
 
 The default build targets Paper 1.21.11 and emits Java 21 bytecode:
