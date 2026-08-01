@@ -47,11 +47,5 @@ Other supported API baselines can be checked without editing the POM:
 
 The shaded plugin jar is written to `target/IP-6.0.0-SNAPSHOT.jar`.
 
-## Development policy
-
-Public compatibility fixes and generally useful bug fixes belong here. Private
-server behavior belongs in a separate overlay that implements `ServerIntegration`;
-see [docs/SERVER_INTEGRATIONS.md](docs/SERVER_INTEGRATIONS.md).
-
 This project is licensed under GPL-3.0. See [NOTICE.md](NOTICE.md) for upstream
 attribution.

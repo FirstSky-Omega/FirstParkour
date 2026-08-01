@@ -11,7 +11,6 @@
 - Migrate missing legacy data into `plugins/IP/plus` and `plugins/IP/elytra`
   without deleting the original folders.
 - Give every Bukkit custom event its own `HandlerList`.
-- Add an optional ServiceLoader extension point for private server integrations.
 - Unregister integrations and PlaceholderAPI expansions during shutdown/reload.
 
 ## 5.4.0-paper26
@@ -20,5 +19,5 @@
 - Replace removed Paper and Adventure API calls.
 - Update build tooling for Java 25 class files.
 
-This section is historical. Version 6 supersedes the separate IPPlus and IEP
-builds and no longer requires a separately installed or built `vilib` artifact.
+This section is historical. Version 6 supersedes the standalone IPPlus and IEP
+builds and no longer requires an independently installed or built `vilib` artifact.
