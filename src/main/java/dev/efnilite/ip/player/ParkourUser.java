@@ -19,10 +19,10 @@ import dev.efnilite.ip.player.data.PreviousData;
 import dev.efnilite.ip.session.Session;
 import dev.efnilite.ip.storage.Storage;
 import dev.efnilite.ip.world.Divider;
-import dev.efnilite.vilib.fastboard.FastBoard;
-import dev.efnilite.vilib.util.Strings;
-import io.papermc.lib.PaperLib;
+import fr.mrmicky.fastboard.FastBoard;
+import dev.efnilite.ip.foundation.util.Strings;
 import me.clip.placeholderapi.PlaceholderAPI;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -149,7 +149,7 @@ public abstract class ParkourUser {
             player.sendPluginMessage(IP.getPlugin(), "BungeeCord", out.toByteArray());
         } catch (ChannelNotRegisteredException ex) {
             IP.logging().stack("Error while trying to send %s to server %s. This server is not registered.".formatted(player.getName(), server), ex);
-            player.kickPlayer("Couldn't move you to %s. Please rejoin.".formatted(server));
+            player.kick(Component.text("Couldn't move you to %s. Please rejoin.".formatted(server)));
         }
     }
 
@@ -245,7 +245,7 @@ public abstract class ParkourUser {
      * @param to Where the player will be teleported to
      */
     public void teleport(@NotNull Location to) {
-        PaperLib.teleportAsync(player, to);
+        player.teleportAsync(to);
     }
 
     /**

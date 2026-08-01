@@ -1,12 +1,21 @@
-name: 'IP'
-description: '无尽跑酷(originally made by Efnilite)'
-author: Creeper_可能c (aka. Maybe__c), Efnilite
-version: 5.4
-api-version: 1.21.11
+name: IP
+description: Unified block and elytra infinite parkour
+author: Creeper_可能c (aka. Maybe__c)
+contributors: [Efnilite]
+version: '${project.version}'
+api-version: '1.21.11'
 main: dev.efnilite.ip.IP
-softdepend: [floodgate, Vault, PlaceholderAPI, Multiverse-Core, VoidGen]
+softdepend: [floodgate, Vault, PlaceholderAPI, Multiverse-Core, HolographicDisplays, Chunky]
 commands:
-    witp:
-        aliases: [parkour, ip]
-        usage: /<command> [arguments]
-        description: Main command for Infinite Parkour
+  witp:
+    aliases: [parkour, ip]
+    usage: /<command> [arguments]
+    description: Main command for Infinite Parkour
+  ipp:
+    aliases: [ipplus]
+    usage: /<command> [arguments]
+    description: Compatibility command for the former IPPlus features
+  iep:
+    aliases: [infiniteelytraparkour]
+    usage: /<command> [arguments]
+    description: Elytra parkour command

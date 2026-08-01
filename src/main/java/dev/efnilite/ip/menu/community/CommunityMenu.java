@@ -4,7 +4,7 @@ import dev.efnilite.ip.config.Locales;
 import dev.efnilite.ip.menu.DynamicMenu;
 import dev.efnilite.ip.menu.Menus;
 import dev.efnilite.ip.menu.ParkourOption;
-import dev.efnilite.vilib.inventory.Menu;
+import dev.efnilite.ip.foundation.inventory.Menu;
 import org.bukkit.entity.Player;
 
 /**

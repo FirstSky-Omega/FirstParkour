@@ -5,7 +5,7 @@ import dev.efnilite.ip.api.Registry;
 import dev.efnilite.ip.menu.ParkourOption;
 import dev.efnilite.ip.style.RandomStyle;
 import dev.efnilite.ip.style.Style;
-import dev.efnilite.vilib.particle.ParticleData;
+import dev.efnilite.ip.foundation.particle.ParticleData;
 import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -136,21 +136,26 @@ public class Option {
     public static ParticleData<?> PARTICLE_DATA;
 
     private static void initEnums() {
+        // Sound names were stable in 1.21 so BLOCK_NOTE_BLOCK_PLING is the right
+        // current fallback; resolve via valueOf to avoid hardcoding an enum const
+        // that could disappear in a future MC drop. (On Paper 26 Sound is still
+        // an enum — only Registry-based lookups are forced for some other types.)
         String value = Config.CONFIG.getString("particles.sound-type").toUpperCase();
-
         try {
             SOUND_TYPE = Sound.valueOf(value);
         } catch (IllegalArgumentException ex) {
-            SOUND_TYPE = Sound.valueOf("BLOCK_NOTE_PLING");
-            IP.logging().error("Invalid sound: %s".formatted(value));
+            SOUND_TYPE = resolveSoundFallback();
+            IP.logging().error("Invalid sound: %s — falling back to %s".formatted(value, SOUND_TYPE));
         }
 
-        value = Config.CONFIG.getString("particles.particle-type");
+        // Particle SPELL_INSTANT was removed in 1.21 (consolidation pass). INSTANT_EFFECT
+        // is the closest visual match; if that's gone too, fall back to END_ROD.
+        value = Config.CONFIG.getString("particles.particle-type").toUpperCase();
         try {
             PARTICLE_TYPE = Particle.valueOf(value);
         } catch (IllegalArgumentException ex) {
-            PARTICLE_TYPE = Particle.valueOf("SPELL_INSTANT");
-            IP.logging().error("Invalid particle type: %s".formatted(value));
+            PARTICLE_TYPE = resolveParticleFallback();
+            IP.logging().error("Invalid particle type: %s — falling back to %s".formatted(value, PARTICLE_TYPE));
         }
 
         SOUND_PITCH = Config.CONFIG.getInt("particles.sound-pitch");
@@ -161,6 +166,22 @@ public class Option {
 
     public enum ParticleShape {
         DOT, CIRCLE, BOX
+    }
+
+    // Fallback resolution probes the live enum so the plugin still loads after a future
+    // 1.22+ rename instead of dying with NoSuchFieldError at class init time.
+    private static Sound resolveSoundFallback() {
+        for (String candidate : new String[]{"BLOCK_NOTE_BLOCK_PLING", "BLOCK_NOTE_PLING", "ENTITY_EXPERIENCE_ORB_PICKUP"}) {
+            try { return Sound.valueOf(candidate); } catch (IllegalArgumentException ignored) {}
+        }
+        return Sound.values()[0];
+    }
+
+    private static Particle resolveParticleFallback() {
+        for (String candidate : new String[]{"INSTANT_EFFECT", "SPELL_INSTANT", "END_ROD", "CRIT"}) {
+            try { return Particle.valueOf(candidate); } catch (IllegalArgumentException ignored) {}
+        }
+        return Particle.values()[0];
     }
 
     // --------------------------------------------------------------

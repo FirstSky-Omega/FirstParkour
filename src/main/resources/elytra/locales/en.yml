@@ -1,0 +1,217 @@
+# English (en)
+# by Efnilite
+
+go back:
+  material: "arrow"
+  name: "<white><bold>Go back"
+  lore: ""
+
+hotbar:
+  play:
+    material: "sugar_cane"
+    name: "<#2fb900><bold>Play"
+    lore: ""
+
+  settings:
+    material: "comparator"
+    name: "<#c10000><bold>Settings"
+    lore: ""
+
+  leaderboards:
+    material: "spruce_hanging_sign"
+    name: "<white><bold>Leaderboards"
+    lore: ""
+
+  leave:
+    material: "barrier"
+    name: "<#b32400><bold>Leave"
+    lore: ""
+
+play:
+  title: "Play"
+
+modes:
+  default:
+    material: "barrel"
+    name: "<white><bold>Default"
+    lore: ""
+
+    title: "Default"
+
+  close:
+    material: "pink_petals"
+    name: "<#fa9abc><bold>Close"
+    lore: "<gray>Stay close to the blocks."
+
+    title: "Close"
+
+  min speed:
+    material: "feather"
+    name: "<white><bold>Min Speed"
+    lore: "<gray>Once you've reached the minimum speed,||<gray>going slower will reset you."
+
+    title: "Min Speed"
+
+  obstacle:
+    material: "oak_fence"
+    name: "<#c49402><bold>Obstacle"
+    lore: "<gray>Occasional obstacles."
+
+    title: "Obstacle"
+
+  speed demon:
+    material: "splash_potion"
+    name: "<#cc3399><bold>Speed Demon"
+    lore: "<gray>Go as fast as you can."
+
+    title: "Speed Demon"
+
+  time trial:
+    material: "clock"
+    name: "<#ddd200><bold>Time Trial"
+    lore: "<gray>Reach a specific score||<gray>as soon as possible."
+
+    title: "Time Trial"
+
+styles:
+  title: "Styles"
+
+  style:
+    material: ""
+    name: "<white><bold>%a"
+    lore: "<gray>Type <white>%b"
+
+  random:
+    material: ""
+    name: "<white><bold>Random"
+    lore: ""
+
+  # Style display-name map — StylesMenu looks up styles.names.<key>, falls back to
+  # the raw config.yml key if missing.
+  names:
+    cherry:          "Cherry Grove"
+    spruce:          "Spruce Forest"
+    crimson:         "Crimson Forest"
+    bamboo:          "Bamboo Grove"
+    nether:          "Nether Fortress"
+    glass:           "Pure Glass"
+    rainbow:         "Rainbow"
+    sunset:          "Sunset"
+    ocean:           "Ocean Deep"
+    galaxy:          "Galaxy"
+    cherry-blossom:  "Cherry Blossom"
+    amethyst-cave:   "Amethyst Geode"
+    glacier:         "Glacier"
+    forest:          "Verdant Forest"
+    candy:           "Candy Clouds"
+    gold-temple:     "Blackstone Temple"
+    copper-patina:   "Copper Patina"
+    spiral:          "Spiral · Red"
+    spiral-aqua:     "Spiral · Aqua"
+    spiral-emerald:  "Spiral · Emerald"
+    spiral-amethyst: "Spiral · Amethyst"
+    spiral-gold:     "Spiral · Gold"
+
+  # Style type names (substituted into %b on the style item lore).
+  types:
+    random:      "Random"
+    incremental: "Spiral"
+
+settings:
+  title: "Settings"
+
+  enabled:
+    material: "green_stained_glass_pane"
+    name: "<#00ff00>"
+    lore: "<#0DCB07><bold>✔"
+
+  disabled:
+    material: "red_stained_glass_pane"
+    name: "<red>"
+    lore: "<red><bold>✘"
+
+  styles:
+    material: ""
+    name: "<#8c0000><bold>Style"
+    lore: "<gray>Currently <white>%a||<gray>Click to change the style."
+
+  radius:
+    material: "blaze_powder"
+    name: "<#ff9900><bold>Radius"
+    lore: "<gray>Currently <white>%a||<gray>Click to change the (circle) radius."
+
+  time:
+    material: "clock"
+    name: "<#ffff00><bold>Time"
+    lore: "<gray>Currently <white>%a||<gray>Click to change the time."
+
+  seed:
+    material: "wheat_seeds"
+    name: "<#00ff00><bold>Seed"
+    lore: "<gray>Currently <white>%a||<gray>To set a seed, use <white>/iep seed <seed><gray>.||<gray>To return to random seeds, click this item."
+
+    random: "random"
+    set: "<gray>Seed set to <white>%a"
+    invalid: "<white>%a <gray>is not a number."
+
+  fall:
+    material: ""
+    name: "<bold>Fall"
+    lore: "<gray>Currently <white>%a||<gray>Click to change the fall message."
+
+  info:
+    material: ""
+    name: "<bold>Info"
+    lore: "<gray>Currently <white>%a||<gray>Click to view extra info."
+
+  metric:
+    material: ""
+    name: "<bold>Use Metric"
+    lore: "<gray>Currently <white>%a||<gray>Click to change the extra info measurement system."
+
+  locale:
+    material: "paper"
+    name: "<white><bold>Locale"
+    lore: "<gray>Currently <white>%a||<gray>Click to change the language."
+
+leaderboards:
+  title: "Leaderboards"
+
+  head:
+    material: "player_head"
+    name: "<white><bold>#%s - %s"
+    lore: "<gray>Score <white>%s||<gray>Time <white>%s||<gray>Seed <white>%s"
+
+  sort:
+    material: "bookshelf"
+    name: "<#DEA11F><bold>Sorted by %s"
+    lore: ""
+    values:
+      - "score"
+      - "time"
+
+reset:
+  reasons:
+    flying: "You were reset because you weren't flying."
+    bounds: "You were reset because you went out of bounds."
+    speed: "You were reset for going too slow."
+
+  lines:
+    - ""
+    - "<gray>Score <white>%score%"
+    - "<gray>High-score <white>%high-score%"
+    - "<gray>Time <white>%time%"
+    - "<gray>Seed <white>%seed%"
+    - "<gray>%reason%"
+
+scoreboard:
+  title: "<gradient:#4800FF:#B200FF><bold>IEP</gradient>"
+
+  lines:
+    - ""
+    - "<#7700FF><bold>Score</bold> <gray>%score%"
+    - "<#7700FF><bold>High-score</bold> <gray>%high-score%"
+    - "<#7700FF><bold>Time</bold> <gray>%time%"
+    - "<#7700FF><bold>Seed</bold> <gray>%seed%"
+    - ""
+    - "<#505050>server.ip"

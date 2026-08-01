@@ -3,7 +3,7 @@ package dev.efnilite.ip.world;
 import dev.efnilite.ip.IP;
 import dev.efnilite.ip.config.Option;
 import dev.efnilite.ip.session.Session;
-import dev.efnilite.vilib.util.Locations;
+import dev.efnilite.ip.foundation.util.Locations;
 import org.bukkit.Location;
 
 import java.util.HashMap;

@@ -4,7 +4,7 @@ import dev.efnilite.ip.config.Config;
 import dev.efnilite.ip.config.Locales;
 import dev.efnilite.ip.player.ParkourPlayer;
 import dev.efnilite.ip.player.ParkourUser;
-import dev.efnilite.vilib.inventory.Menu;
+import dev.efnilite.ip.foundation.inventory.Menu;
 import org.bukkit.entity.Player;
 
 public class MainMenu extends DynamicMenu {

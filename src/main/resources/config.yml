@@ -250,12 +250,13 @@ particles:
 
   # -= Particle type =-
   # The type of particle that will appear when a new block generates.
-  # You can find all types at https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Particle.html
-  particle-type: 'SPELL_INSTANT'
+  # You can find all types at https://jd.papermc.io/paper/26.1.2/org/bukkit/Particle.html
+  # (SPELL_INSTANT was renamed to INSTANT_EFFECT in 1.21.)
+  particle-type: 'INSTANT_EFFECT'
 
   # -= Sound type =-
   # The sound that will play when a new block generates.
-  # You can find all sounds at https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+  # You can find all sounds at https://jd.papermc.io/paper/26.1.2/org/bukkit/Sound.html
   sound-type: 'BLOCK_NOTE_BLOCK_GUITAR'
 
   # -= Sound pitch =-

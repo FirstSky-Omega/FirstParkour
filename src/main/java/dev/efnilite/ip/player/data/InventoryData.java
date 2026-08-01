@@ -2,7 +2,7 @@ package dev.efnilite.ip.player.data;
 
 import dev.efnilite.ip.IP;
 import dev.efnilite.ip.config.Config;
-import dev.efnilite.vilib.util.Task;
+import dev.efnilite.ip.foundation.util.Task;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;

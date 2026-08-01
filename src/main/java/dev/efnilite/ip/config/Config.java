@@ -3,7 +3,7 @@ package dev.efnilite.ip.config;
 import dev.efnilite.ip.IP;
 import dev.efnilite.ip.reward.Rewards;
 import dev.efnilite.ip.schematic.Schematics;
-import dev.efnilite.vilib.configupdater.ConfigUpdater;
+import com.tchristofferson.configupdater.ConfigUpdater;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;

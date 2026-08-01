@@ -1,7 +1,7 @@
 package dev.efnilite.ip.generator;
 
-import dev.efnilite.vilib.util.Colls;
-import dev.efnilite.vilib.util.Probs;
+import dev.efnilite.ip.foundation.util.Colls;
+import dev.efnilite.ip.foundation.util.Probs;
 
 import java.util.Map;
 import java.util.Random;

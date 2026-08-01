@@ -2,7 +2,7 @@ package dev.efnilite.ip.schematic;
 
 import dev.efnilite.ip.IP;
 import dev.efnilite.ip.config.Config;
-import dev.efnilite.vilib.util.Task;
+import dev.efnilite.ip.foundation.util.Task;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,7 +38,7 @@ public class Schematics {
             }
           
             try {
-                dev.efnilite.vilib.schematic.Schematics.addFromFiles(IP.getPlugin(), files);
+                dev.efnilite.ip.foundation.schematic.Schematics.addFromFiles(IP.getPlugin(), files);
             } catch (IOException | ClassNotFoundException ex) {
                 IP.logging().stack("Error while trying to load schematics", ex);
             }
