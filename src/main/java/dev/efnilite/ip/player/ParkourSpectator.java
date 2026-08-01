@@ -5,10 +5,8 @@ import dev.efnilite.ip.api.event.ParkourSpectateEvent;
 import dev.efnilite.ip.config.Locales;
 import dev.efnilite.ip.player.data.PreviousData;
 import dev.efnilite.ip.session.Session;
-import dev.efnilite.vilib.util.Strings;
 import dev.efnilite.vilib.util.Task;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitTask;
@@ -75,7 +73,11 @@ public class ParkourSpectator extends ParkourUser {
      * Updates the spectator's action bar, scoreboard and checks distance.
      */
     public void update() {
-        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(Strings.colour(Locales.getString(player, "play.spectator.action_bar"))));
+        // Paper 26: Bungee Chat's TextComponent.fromLegacyText is gone. Deserialize the raw
+        // locale string straight through MiniMessage so we keep MiniMessage tag support.
+        // (Legacy "&"-color strings still survive via Strings.colour → legacy serializer pipeline,
+        // but the action bar path doesn't need that compatibility layer.)
+        player.sendActionBar(MiniMessage.miniMessage().deserialize(Locales.getString(player, "play.spectator.action_bar")));
         player.setGameMode(GameMode.SPECTATOR);
         updateScoreboard(session.generator);
 

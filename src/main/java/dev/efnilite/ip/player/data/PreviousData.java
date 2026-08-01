@@ -4,7 +4,6 @@ import dev.efnilite.ip.IP;
 import dev.efnilite.ip.config.Config;
 import dev.efnilite.ip.config.Option;
 import dev.efnilite.ip.reward.Reward;
-import io.papermc.lib.PaperLib;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -59,7 +58,7 @@ public class PreviousData {
         var to = Config.CONFIG.getBoolean("bungeecord.go-back-enabled") ? Option.GO_BACK_LOC : location;
 
         if (!urgent)
-            PaperLib.teleportAsync(player, to).thenRun(() -> apply(player));
+            player.teleportAsync(to).thenRun(() -> apply(player));
         else {
             player.teleport(to);
 

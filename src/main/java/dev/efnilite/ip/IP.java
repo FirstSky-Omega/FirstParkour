@@ -2,6 +2,7 @@ package dev.efnilite.ip;
 
 import dev.efnilite.ip.api.Registry;
 import dev.efnilite.ip.config.Config;
+import dev.efnilite.ip.hologram.HologramManager;
 import dev.efnilite.ip.hook.HoloHook;
 import dev.efnilite.ip.hook.PAPIHook;
 import dev.efnilite.ip.mode.DefaultMode;
@@ -15,6 +16,9 @@ import dev.efnilite.vilib.ViPlugin;
 import dev.efnilite.vilib.inventory.Menu;
 import dev.efnilite.vilib.util.Logging;
 import dev.efnilite.vilib.util.UpdateChecker;
+import dev.efnilite.vilib.util.VoidGenerator;
+import org.bukkit.generator.ChunkGenerator;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -112,11 +116,52 @@ public final class IP extends ViPlugin {
         registerListener(new Events());
         registerCommand("ip", new Command());
 
+        // Built-in hologram leaderboards — replaces DH/HD softdepend on Paper 26.
+        // Uses TextDisplay + Interaction (Display API) so there's no armor-stand
+        // entity holding chunks open. Initialized after Events so PAPI placeholder
+        // resolution is wired before any refresh tick fires.
+        try {
+            HologramManager.enable();
+        } catch (Throwable t) {
+            logging.stack("Failed to enable the hologram subsystem — continuing without holograms", t);
+        }
+
         UpdateChecker.check(this, 87226);
+    }
+
+    /**
+     * Exposes our void {@link ChunkGenerator} to the rest of the server, so users can
+     * create void worlds with e.g. {@code /mv create hub normal -g IP} or by setting
+     * {@code generator: IP} in bukkit.yml — exactly the way the now-deprecated
+     * <a href="https://www.spigotmc.org/resources/voidgen.27039/">VoidGen</a> plugin used
+     * to be used. With this we drop VoidGen as a hard requirement for any other void world
+     * on the server, not just IP's own parkour world.
+     *
+     * <p>Returns a generator that produces empty chunks (no noise, no surface, no caves,
+     * no bedrock, no decorations, no mobs, no structures). Same implementation IP uses
+     * for its own parkour world.</p>
+     *
+     * @param worldName the name of the world being generated (informational; ignored)
+     * @param id        the generator id token from {@code -g IP:<id>}; ignored — we
+     *                  always produce a void world regardless of token.
+     */
+    @Override
+    public ChunkGenerator getDefaultWorldGenerator(@NotNull String worldName, @Nullable String id) {
+        return VoidGenerator.getGenerator();
     }
 
     @Override
     public void disable() {
+        // Tear down the hologram subsystem FIRST. Its entities are setPersistent(false)
+        // and won't survive in the world file even if we skip this, but doing it
+        // explicitly here means the chunk tickets are released cleanly and a /reload
+        // (which calls disable→enable on the same JVM) starts from a clean slate.
+        try {
+            HologramManager.disable();
+        } catch (Throwable t) {
+            logging.stack("Error while disabling the hologram subsystem", t);
+        }
+
         try {
             for (ParkourUser user : ParkourUser.getUsers()) {
                 try {

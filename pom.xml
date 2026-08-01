@@ -6,12 +6,13 @@
 
     <groupId>dev.efnilite</groupId>
     <artifactId>IP</artifactId>
-    <version>5.3.1</version>
+    <version>5.4.0-paper26</version>
 
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.release>25</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <paper.version>26.1.2.build.72-stable</paper.version>
+        <vilib.version>2.1.0-paper26</vilib.version>
     </properties>
 
     <build>
@@ -19,27 +20,45 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <release>25</release>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.6.1</version>
+                <version>3.6.2</version>
                 <executions>
                     <execution>
-                        <id>attach-javadocs</id>
+                        <id>shade</id>
                         <phase>package</phase>
                         <goals>
                             <goal>shade</goal>
                         </goals>
                         <configuration>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <!-- Relocate vilib so IPP can keep its existing
+                                 dev.efnilite.ip.lib.vilib.* import paths. -->
                             <relocations>
                                 <relocation>
                                     <pattern>dev.efnilite.vilib</pattern>
                                     <shadedPattern>dev.efnilite.ip.lib.vilib</shadedPattern>
                                 </relocation>
-                                <relocation>
-                                    <pattern>io.papermc.lib</pattern>
-                                    <shadedPattern>dev.efnilite.ip.lib.paperlib</shadedPattern>
-                                </relocation>
                             </relocations>
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/MANIFEST.MF</exclude>
+                                        <exclude>META-INF/maven/**</exclude>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
                         </configuration>
                     </execution>
                 </executions>
@@ -53,28 +72,12 @@
             <url>https://repo.papermc.io/repository/maven-public/</url>
         </repository>
         <repository>
-            <id>spigot-repo</id>
-            <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
-        </repository>
-        <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
         <repository>
-            <id>maven-central</id>
-            <url>https://oss.sonatype.org/content/groups/public</url>
-        </repository>
-        <repository>
             <id>placeholderapi</id>
             <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
-        </repository>
-        <repository>
-            <id>mv-repo</id>
-            <url>https://repo.onarandombox.com/content/groups/public/</url>
-        </repository>
-        <repository>
-            <id>dmulloy2-repo</id>
-            <url>https://repo.dmulloy2.net/repository/public/</url>
         </repository>
         <repository>
             <id>codemc-repo</id>
@@ -85,8 +88,7 @@
             <url>https://repo.opencollab.dev/maven-snapshots/</url>
         </repository>
         <repository>
-            <id>maven_central</id>
-            <name>Maven Central</name>
+            <id>central</id>
             <url>https://repo.maven.apache.org/maven2/</url>
         </repository>
     </repositories>
@@ -95,21 +97,17 @@
         <dependency>
             <groupId>io.papermc.paper</groupId>
             <artifactId>paper-api</artifactId>
-            <version>1.21.11-R0.1-SNAPSHOT</version>
+            <version>${paper.version}</version>
             <scope>provided</scope>
         </dependency>
 
+        <!-- vilib is built locally from D:/MC/temp/vilib via `mvn install` first.
+             We resolve via local Maven repo (~/.m2). The com.sb:vilib jitpack dep
+             that was unresolvable in 5.3.x is gone. -->
         <dependency>
-            <groupId>com.sb</groupId>
+            <groupId>dev.efnilite</groupId>
             <artifactId>vilib</artifactId>
-            <version>2.1.5</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>io.papermc</groupId>
-            <artifactId>paperlib</artifactId>
-            <version>1.0.8</version>
+            <version>${vilib.version}</version>
             <scope>compile</scope>
         </dependency>
 

@@ -1,10 +1,13 @@
 name: 'IP'
-description: '无尽跑酷(originally made by Efnilite)'
+description: '无尽跑酷 (originally made by Efnilite, Paper 26 port by Creeper_可能c)'
 author: Creeper_可能c (aka. Maybe__c), Efnilite
-version: 5.4
-api-version: 1.21.11
+version: 5.4.0-paper26
+# Paper 26.1.2 maps to MC 1.21.11 — older folia/spigot servers will refuse to load this jar.
+api-version: '1.21'
 main: dev.efnilite.ip.IP
-softdepend: [floodgate, Vault, PlaceholderAPI, Multiverse-Core, VoidGen]
+# VoidGen was removed: vilib ships its own ChunkGenerator (dev.efnilite.vilib.util.VoidGenerator)
+# so no external plugin is required to create a flat void world.
+softdepend: [floodgate, Vault, PlaceholderAPI, Multiverse-Core]
 commands:
     witp:
         aliases: [parkour, ip]

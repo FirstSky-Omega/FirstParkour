@@ -15,7 +15,8 @@ import dev.efnilite.vilib.particle.ParticleData;
 import dev.efnilite.vilib.particle.Particles;
 import dev.efnilite.vilib.util.Locations;
 import dev.efnilite.vilib.util.Strings;
-import io.papermc.lib.PaperLib;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -88,15 +89,15 @@ public class Events implements EventWatcher {
         org.bukkit.World fallback = Bukkit.getWorld(Config.CONFIG.getString("world.fall-back"));
 
         if (fallback != null) {
-            PaperLib.teleportAsync(player, fallback.getSpawnLocation(), PlayerTeleportEvent.TeleportCause.PLUGIN);
+            player.teleportAsync(fallback.getSpawnLocation(), PlayerTeleportEvent.TeleportCause.PLUGIN);
             return;
         }
 
-        PaperLib.teleportAsync(player, Bukkit.getWorlds().stream()
+        player.teleportAsync(Bukkit.getWorlds().stream()
                 .filter(world -> !world.equals(World.getWorld()))
                 .findAny()
                 .orElseThrow(() -> new NoSuchElementException("No fallback world was found!"))
-                .getSpawnLocation());
+                .getSpawnLocation(), PlayerTeleportEvent.TeleportCause.PLUGIN);
     }
 
     @EventHandler
@@ -158,7 +159,7 @@ public class Events implements EventWatcher {
         Player player = event.getPlayer();
         ItemStack item = player.getInventory().getItemInMainHand();
 
-        if (!player.hasPermission("ip.admin") || item.getItemMeta() == null || !item.getItemMeta().getDisplayName().contains("Schematic Wand") || event.getClickedBlock() == null || event.getHand() != EquipmentSlot.HAND) {
+        if (!player.hasPermission("ip.admin") || item.getItemMeta() == null || !isSchematicWand(item) || event.getClickedBlock() == null || event.getHand() != EquipmentSlot.HAND) {
             return;
         }
 
@@ -245,6 +246,14 @@ public class Events implements EventWatcher {
         }
     }
 
+    // Paper 26: ItemMeta#getDisplayName() is deprecated (returns a legacy String). Use the
+    // Component-returning displayName() and convert to plain text for substring matching.
+    private static boolean isSchematicWand(ItemStack item) {
+        Component name = item.getItemMeta() == null ? null : item.getItemMeta().displayName();
+        if (name == null) return false;
+        return PlainTextComponentSerializer.plainText().serialize(name).contains("Schematic Wand");
+    }
+
     private ItemStack getHeldItem(Player player) {
         PlayerInventory inventory = player.getInventory();
         return inventory.getItemInMainHand().getType() == Material.AIR ? inventory.getItemInOffHand() : inventory.getItemInMainHand();
@@ -262,7 +271,7 @@ public class Events implements EventWatcher {
             Bukkit.getWorlds().stream()
                     .filter(world -> !world.equals(parkour))
                     .findAny()
-                    .ifPresent(world -> PaperLib.teleportAsync(player, world.getSpawnLocation()));
+                    .ifPresent(world -> player.teleportAsync(world.getSpawnLocation(), PlayerTeleportEvent.TeleportCause.PLUGIN));
             return;
         }
 
