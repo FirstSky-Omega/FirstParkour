@@ -1,8 +1,8 @@
 # Infinite Parkour Reborn
 
-Infinite Parkour Reborn is the community-maintained continuation of Efnilite's
-Infinite Parkour family. Version 6 combines the former Infinite Parkour, IPPlus,
-and Infinite Elytra Parkour projects into one plugin and one data directory.
+Infinite Parkour Reborn combines Infinite Parkour, IPPlus, and Infinite Elytra
+Parkour into one plugin and one data directory. The original projects were
+created by Efnilite.
 
 ## Supported servers
 
@@ -13,7 +13,6 @@ Infinite Parkour Reborn supports the following server versions:
 - Paper 26.2 on Java 25
 
 Spigot, Folia, older Minecraft releases, and unofficial forks are not supported.
-Maintenance focuses on compatibility with these versions and general bug fixes.
 
 ## Installation
 
