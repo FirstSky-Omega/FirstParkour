@@ -36,9 +36,14 @@ public final class IP extends ParkourPlugin {
 
     private static Logging logging;
     private static IP instance;
-    private boolean plusEnabled;
-    private boolean elytraEnabled;
+    public static boolean plusEnabled;
+    public static boolean elytraEnabled;
+    private static Command parkourCommand;
     private List<ServerIntegration> serverIntegrations = List.of();
+
+    public static Command getParkourCommand() {
+        return parkourCommand;
+    }
 
     @Nullable
     private static PAPIHook placeholderHook;
@@ -124,7 +129,9 @@ public final class IP extends ParkourPlugin {
         // ----- Events -----
 
         registerListener(new Events());
-        registerCommand("parkour", new Command());
+        parkourCommand = new Command();
+        registerCommand("parkour", parkourCommand);
+        registerListener(new TabCompleteListener());
 
         try {
             IPP.enable(this);

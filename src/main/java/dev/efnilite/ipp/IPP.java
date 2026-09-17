@@ -31,6 +31,12 @@ public final class IPP {
     private static Logging logging;
     private static PlusConfig configuration;
 
+    private static PlusCommand command;
+
+    public static PlusCommand getCommand() {
+        return command;
+    }
+
     private IPP() {
     }
 
@@ -68,7 +74,8 @@ public final class IPP {
 
         // Events
         owner.registerListener(new PlusHandler());
-        owner.registerCommand("parkourplus", new PlusCommand());
+        command = new PlusCommand();
+        owner.registerCommand("parkourplus", command);
 
         // Gamemode register
         registerMode(new PracticeMode());
