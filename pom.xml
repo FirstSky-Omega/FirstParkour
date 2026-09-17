@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>dev.efnilite</groupId>
-    <artifactId>IP</artifactId>
+    <artifactId>FirstParkour</artifactId>
     <version>6.0.0-SNAPSHOT</version>
 
     <properties>
