@@ -1,55 +1,61 @@
-# Infinite Parkour Reborn
+# FirstParkour
 
-Infinite Parkour Reborn combines Infinite Parkour, IPPlus, and Infinite Elytra
-Parkour into one plugin and one data directory. The original projects were
-created by Efnilite.
+Plugin de parkour infini pour le serveur **FirstSky** — compatible **Folia 26.2**.  
+Regroupe le parkour bloc, les modes avancés (IPPlus) et le parkour élytra en un seul plugin unifié.
 
-## Supported servers
+---
 
-Infinite Parkour Reborn supports the following server versions:
+## Fonctionnalités
 
-- Paper 1.21.11 on Java 21
-- Paper 26.1.2 on Java 25
-- Paper 26.2 on Java 25
+- **Parkour bloc infini** — génération procédurale de blocs, scores et classements
+- **Modes avancés** — Practice, Speed, SuperJump, TimeTrial et plus via `/parkourplus`
+- **Parkour élytra** — circuits en vol libre avec obstacles via `/eparkour`
+- **Hologrammes** — classements en temps réel dans le monde
+- **PlaceholderAPI** — intégration complète pour afficher les stats partout
+- **Compatibilité Folia** — scheduler GlobalRegion + Async, aucun appel Bukkit bloquant
 
-Spigot, Folia, older Minecraft releases, and unofficial forks are not supported.
+---
+
+## Commandes
+
+| Commande | Alias | Description |
+|---|---|---|
+| `/parkour` | `/witp`, `/ip` | Commande principale du parkour bloc |
+| `/parkourplus` | `/ipp`, `/ipplus` | Modes de jeu avancés |
+| `/eparkour` | `/iep` | Parkour élytra |
+
+---
+
+## Compatibilité serveur
+
+| Plateforme | Version | Java |
+|---|---|---|
+| Folia | 26.2 | 21+ |
+| Paper | 1.21.11 | 21 |
+
+---
 
 ## Installation
 
-1. Stop the server.
-2. Remove the old IP, IPPlus, and IEP jars.
-3. Put the single Infinite Parkour Reborn jar in `plugins/`.
-4. Start the server.
+1. Arrêter le serveur
+2. Supprimer les anciens JARs IP, IPPlus et IEP si présents
+3. Placer `FirstParkour.jar` dans le dossier `plugins/`
+4. Démarrer le serveur
 
-The plugin copies missing files from the old `plugins/IPPlus` and `plugins/IEP`
-folders into `plugins/IP/plus` and `plugins/IP/elytra`. The old folders are not
-deleted. See [MIGRATION.md](MIGRATION.md) before removing them manually.
+Les fichiers de config des anciens plugins (`plugins/IPPlus`, `plugins/IEP`) sont automatiquement copiés dans `plugins/IP/plus` et `plugins/IP/elytra` au premier démarrage.
 
-Commands from the former plugins remain available through `/ipp` and `/iep`.
-The main command is `/witp`, with `/parkour` and `/ip` as aliases.
+---
 
-## Documentation
+## Build
 
-Installation, migration, commands, permissions, configuration, placeholders,
-and developer API documentation are available at
-[lostumbrella58.github.io/IP-Reborn](https://lostumbrella58.github.io/IP-Reborn/).
-
-## Building
-
-The default build targets Paper 1.21.11 and emits Java 21 bytecode:
-
-```powershell
-.\mvnw.cmd -B clean verify
+```bash
+./mvnw clean package
 ```
 
-Other supported API baselines can be checked without editing the POM:
+Le JAR compilé se trouve dans `target/IP-6.0.0-SNAPSHOT.jar`.
 
-```powershell
-.\mvnw.cmd -B clean verify -Dpaper.version=26.1.2.build.74-stable
-.\mvnw.cmd -B clean verify -Dpaper.version=26.2.build.84-stable
-```
+---
 
-The shaded plugin jar is written to `target/IP-6.0.0-SNAPSHOT.jar`.
+## Licence
 
-This project is licensed under GPL-3.0. See [NOTICE.md](NOTICE.md) for upstream
-attribution.
+GPL-3.0 — basé sur [Infinite Parkour](https://github.com/Efnilite/Walk-in-the-Park) par Efnilite. Voir [NOTICE.md](NOTICE.md).
