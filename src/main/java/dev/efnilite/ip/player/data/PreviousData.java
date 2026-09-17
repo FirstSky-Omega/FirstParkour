@@ -2,6 +2,7 @@ package dev.efnilite.ip.player.data;
 
 import dev.efnilite.ip.IP;
 import dev.efnilite.ip.config.Config;
+
 import dev.efnilite.ip.config.Option;
 import dev.efnilite.ip.reward.Reward;
 import org.bukkit.GameMode;
@@ -58,7 +59,7 @@ public class PreviousData {
         var to = Config.CONFIG.getBoolean("bungeecord.go-back-enabled") ? Option.GO_BACK_LOC : location;
 
         if (!urgent)
-            player.teleportAsync(to).thenRun(() -> apply(player));
+            player.teleportAsync(to).thenRun(() -> player.getScheduler().run(IP.getPlugin(), t -> apply(player), null));
         else {
             player.teleport(to);
 

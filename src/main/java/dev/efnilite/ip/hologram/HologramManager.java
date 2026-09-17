@@ -250,13 +250,14 @@ public final class HologramManager implements Listener {
             TrackedHologram t = active.get(taggedId);
             if (t == null) {
                 // No live tracker for this id → this is an orphan from a previous run.
-                try { entity.remove(); } catch (Throwable ignored) {}
+                // Folia : entity.remove() doit passer par l'EntityScheduler de l'entité
+                try { entity.getScheduler().run(IP.getPlugin(), st -> entity.remove(), null); } catch (Throwable ignored) {}
                 continue;
             }
             // We have a tracker, but the entity isn't one of the ones we just spawned
             // (i.e. it's a stale duplicate). Remove it; the tracker keeps its own.
             if (!isCurrentEntityOf(entity, t)) {
-                try { entity.remove(); } catch (Throwable ignored) {}
+                try { entity.getScheduler().run(IP.getPlugin(), st -> entity.remove(), null); } catch (Throwable ignored) {}
             }
         }
     }
@@ -342,7 +343,8 @@ public final class HologramManager implements Listener {
             }
         }
         for (Entity e : toRemove) {
-            try { e.remove(); } catch (Throwable ignored) {}
+            // Folia : entity.remove() doit passer par l'EntityScheduler de l'entité
+            try { e.getScheduler().run(IP.getPlugin(), t -> e.remove(), null); } catch (Throwable ignored) {}
         }
         if (!toRemove.isEmpty()) {
             IP.log("Swept %d stale entities for hologram '%s'".formatted(toRemove.size(), id));

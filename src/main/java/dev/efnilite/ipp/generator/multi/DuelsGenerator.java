@@ -17,6 +17,7 @@ import dev.efnilite.ipp.IPP;
 import dev.efnilite.ipp.config.PlusConfigOption;
 import dev.efnilite.ipp.config.PlusLocales;
 import dev.efnilite.ipp.mode.PlusMode;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -98,7 +99,7 @@ public final class DuelsGenerator extends MultiplayerGenerator {
                     playerSpawn.setYaw(-90);
                     block.setType(Material.AIR);
 
-                    player.teleport(playerSpawn);
+                    player.player.teleportAsync(playerSpawn);
                 }
             }
         }
@@ -161,7 +162,7 @@ public final class DuelsGenerator extends MultiplayerGenerator {
                             sendTitle(player, args[0], args[1], 0, 21, 5);
                             for (Block block : generator.island.blocks) {
                                 if (block.getType() == Material.BARRIER) {
-                                    block.setType(Material.AIR);
+                                    Bukkit.getRegionScheduler().run(IPP.getPlugin(), block.getLocation(), t -> block.setType(Material.AIR));
                                 }
                             }
 

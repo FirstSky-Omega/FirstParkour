@@ -7,7 +7,9 @@ import dev.efnilite.ip.menu.settings.ParkourSettingsMenu;
 import dev.efnilite.ip.mode.Mode;
 import dev.efnilite.ip.player.ParkourSpectator;
 import dev.efnilite.ip.session.Session;
+import dev.efnilite.ipp.IPP;
 import dev.efnilite.ipp.mode.PlusMode;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -178,9 +180,11 @@ public final class SuperJumpGenerator extends PlusGenerator {
             updateJumpDistance();
         }
 
-        // clear history
+        // clear history — each block.setType must run on its chunk's RegionScheduler (Folia)
         history.remove(0);
-        history.forEach(blocks -> blocks.forEach(block -> block.setType(Material.AIR)));
+        history.forEach(blocks -> blocks.forEach(block ->
+                Bukkit.getServer().getRegionScheduler().run(IPP.getPlugin(), block.getLocation(), t -> block.setType(Material.AIR))
+        ));
         history.clear();
 
         super.reset(regenerate);

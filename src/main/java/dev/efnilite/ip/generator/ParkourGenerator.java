@@ -33,7 +33,7 @@ import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.Fence;
 import org.bukkit.block.data.type.GlassPane;
-import org.bukkit.scheduler.BukkitTask;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
@@ -90,7 +90,7 @@ public class ParkourGenerator {
     /**
      * The task used in checking the player's current location
      */
-    public BukkitTask task;
+    public ScheduledTask task;
 
     /**
      * Where blocks from schematics spawn
@@ -384,10 +384,7 @@ public class ParkourGenerator {
     }
 
     public void startTick() {
-        task = Task.create(IP.getPlugin())
-            .repeat(1)
-            .execute(this::tick)
-            .run();
+        task = player.player.getScheduler().runAtFixedRate(IP.getPlugin(), t -> tick(), () -> {}, 1L, 1L);
     }
 
     /**
@@ -565,8 +562,8 @@ public class ParkourGenerator {
         heading = Option.HEADING.getDirection();
 
         if (regenerate) { // generate back the blocks
-            player.teleport(playerSpawn);
-            generateFirst(playerSpawn, blockSpawn);
+            player.player.teleportAsync(playerSpawn)
+                .thenRun(() -> player.player.getScheduler().run(IP.getPlugin(), t -> generateFirst(playerSpawn, blockSpawn), null));
             return;
         }
 

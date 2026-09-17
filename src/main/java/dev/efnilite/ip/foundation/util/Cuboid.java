@@ -1,5 +1,6 @@
 package dev.efnilite.ip.foundation.util;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -7,12 +8,10 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.type.Fence;
 import org.bukkit.block.data.type.Wall;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.function.Consumer;
 
 /**
  * Asynchronously gets the {@link Block} instances between the two specified {@link Location} instances.
@@ -33,29 +32,32 @@ public class Cuboid {
      * @param onComplete What to do on completion.
      */
     public static void set(@NotNull Map<Block, BlockData> blocks, Plugin plugin, @Nullable Runnable onComplete) {
+        if (blocks.isEmpty()) {
+            if (onComplete != null) onComplete.run();
+            return;
+        }
+
         Queue<Block> queue = new LinkedList<>(blocks.keySet());
+        Location firstLocation = blocks.keySet().iterator().next().getLocation();
 
-        Task.create(plugin).repeat(1).execute(new BukkitRunnable() {
-            @Override
-            public void run() {
-                for (int i = 0; i < CHANGES_PER_TICK; i++) {
-                    Block block = queue.poll();
+        Bukkit.getServer().getRegionScheduler().runAtFixedRate(plugin, firstLocation, scheduledTask -> {
+            for (int i = 0; i < CHANGES_PER_TICK; i++) {
+                Block block = queue.poll();
 
-                    if (block == null) {
-                        // no blocks left, so cancel task
-                        cancel();
+                if (block == null) {
+                    // no blocks left, so cancel task
+                    scheduledTask.cancel();
 
-                        if (onComplete != null) {
-                            onComplete.run();
-                        }
-
-                        return;
+                    if (onComplete != null) {
+                        onComplete.run();
                     }
 
-                    setBlock(block, blocks.get(block));
+                    return;
                 }
+
+                setBlock(block, blocks.get(block));
             }
-        }).run();
+        }, 1L, 1L);
     }
 
     private static void setBlock(Block block, BlockData data) {
@@ -96,15 +98,4 @@ public class Cuboid {
         return blocks;
     }
 
-    /**
-     * Returns all blocks between the provided locations asynchronously.
-     *
-     * @param pos1       The first location
-     * @param pos2       The second location
-     * @param onComplete A {@link Consumer} with the list of gathered blocks.
-     */
-    public static void getAsync(@NotNull Location pos1, @NotNull Location pos2, boolean ignoreAir,
-                                Plugin plugin, @NotNull Consumer<List<Block>> onComplete) {
-        Task.create(plugin).async().execute(() -> onComplete.accept(get(pos1, pos2, ignoreAir))).run();
-    }
 }

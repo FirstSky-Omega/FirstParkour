@@ -49,7 +49,7 @@ public final class TeamSurvivalGenerator extends MultiplayerGenerator {
 
             // teleport player if worlds don't match
             if (location.getWorld() != playerSpawn.getWorld()) {
-                pp.teleport(playerSpawn);
+                pp.player.teleportAsync(playerSpawn);
                 continue;
             }
 
@@ -110,7 +110,7 @@ public final class TeamSurvivalGenerator extends MultiplayerGenerator {
         if (regenerate) {
             lastPlayerBlockMap.clear();
 
-            getPlayers().forEach(player -> player.teleport(playerSpawn));
+            getPlayers().forEach(player -> player.player.teleportAsync(playerSpawn));
         }
     }
 

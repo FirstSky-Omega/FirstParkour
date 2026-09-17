@@ -10,8 +10,6 @@ import org.bukkit.block.data.MultipleFacing;
 import org.bukkit.util.Vector;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 
 /**
@@ -83,20 +81,16 @@ public class SchematicPaster {
     }
 
     private List<Block> paste(Supplier<Map<Block, BlockData>> blocksGetter) {
-        try {
-            Map<Block, BlockData> blocks = CompletableFuture.supplyAsync(blocksGetter).get();
+        Map<Block, BlockData> blocks = blocksGetter.get();
 
-            blocks.forEach((block, data) -> {
-                if (block == null || data == null) {
-                    return;
-                }
+        blocks.forEach((block, data) -> {
+            if (block == null || data == null) {
+                return;
+            }
 
-                block.setBlockData(data, false);
-            });
+            block.setBlockData(data, false);
+        });
 
-            return new ArrayList<>(blocks.keySet());
-        } catch (InterruptedException | ExecutionException ex) {
-            return Collections.emptyList();
-        }
+        return new ArrayList<>(blocks.keySet());
     }
 }

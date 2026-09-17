@@ -2,7 +2,6 @@ package dev.efnilite.ipp.generator.multi;
 
 import dev.efnilite.ip.generator.GeneratorOption;
 import dev.efnilite.ip.foundation.util.Colls;
-import dev.efnilite.ip.foundation.util.Task;
 import dev.efnilite.ip.menu.ParkourOption;
 import dev.efnilite.ip.menu.settings.ParkourSettingsMenu;
 import dev.efnilite.ip.mode.Mode;
@@ -13,7 +12,6 @@ import dev.efnilite.ipp.generator.single.PlusGenerator;
 import dev.efnilite.ipp.mode.PlusMode;
 import org.bukkit.Material;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -34,17 +32,6 @@ public class SingleDuelsGenerator extends PlusGenerator {
         player.updateGeneratorSettings(this);
 
         menu = new ParkourSettingsMenu(ParkourOption.SCHEMATICS, ParkourOption.STYLES, ParkourOption.SPECIAL_BLOCKS);
-
-        // avoids incomplete joining setup error
-        task = Task.create(IPP.getPlugin())
-                .delay(1)
-                .execute(new BukkitRunnable() {
-                    @Override
-                    public void run() {
-
-                    }
-                })
-                .run();
     }
 
     public void setPlayerIndex(int playerIndex) {

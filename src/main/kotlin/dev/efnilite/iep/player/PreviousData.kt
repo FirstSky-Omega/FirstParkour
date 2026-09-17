@@ -7,7 +7,6 @@ import dev.efnilite.iep.reward.Reward
 import dev.efnilite.iep.world.World
 import dev.efnilite.ip.foundation.inventory.Menu
 import dev.efnilite.ip.foundation.inventory.item.Item
-import dev.efnilite.ip.foundation.util.Task
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Material
@@ -112,8 +111,9 @@ data class PreviousData(private val player: Player) {
             return
         }
         if (urgent) {
-            player.teleport(position)
-            onMain { resetInner() }
+            player.teleportAsync(position).thenRun {
+                onMain { resetInner() }
+            }
             return
         }
 
@@ -153,7 +153,7 @@ data class PreviousData(private val player: Player) {
         if (Bukkit.isPrimaryThread()) {
             r()
         } else {
-            Task.create(IEP.instance).execute(Runnable { r() }).run()
+            player.scheduler.run(IEP.instance, { _ -> r() }, null)
         }
     }
 }

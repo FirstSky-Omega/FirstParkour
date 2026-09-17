@@ -168,7 +168,9 @@ public class Lobby {
         int z = Numbers.random(min.getBlockZ() + LOBBY_SAFE_RANGE, max.getBlockZ() - LOBBY_SAFE_RANGE);
 
         Location location = new Location(world, x, y, z);
-        location.getBlock().setType(Material.SMOOTH_QUARTZ, false);
+        // Folia : mutation de bloc sur le thread RegionScheduler du chunk concerné
+        Bukkit.getServer().getRegionScheduler().run(IPP.getPlugin(), location,
+                t -> location.getBlock().setType(Material.SMOOTH_QUARTZ, false));
 
         return location;
     }

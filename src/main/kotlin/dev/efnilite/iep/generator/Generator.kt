@@ -23,6 +23,7 @@ import org.bukkit.Bukkit
 import org.bukkit.Material
 import org.bukkit.block.Block
 import org.bukkit.entity.Player
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask
 import org.bukkit.scheduler.BukkitTask
 import org.bukkit.util.Vector
 import java.time.Instant
@@ -132,7 +133,7 @@ open class Generator {
 
     private lateinit var rewardHandler: RewardHandler
     private lateinit var island: Island
-    private var task: BukkitTask? = null
+    private var task: ScheduledTask? = null
     // Marked true by remove(). tick() bails out at the top if it sees this, even if
     // BukkitTask.cancel() didn't take effect synchronously (we observed cases on Paper 26
     // where a tick that was already mid-dispatch from CraftScheduler.mainThreadHeartbeat
@@ -243,11 +244,7 @@ open class Generator {
 
         reset(ResetReason.RESET)
 
-        task = Task.create(IEP.instance)
-            .delay(5)
-            .repeat(1)
-            .execute(::tick)
-            .run()
+        task = player.player.scheduler.runAtFixedRate(IEP.instance, { _ -> tick() }, null, 5L, 1L)
 
         chunkyHook?.init()
     }
@@ -666,8 +663,11 @@ open class Generator {
         val spawn = island.playerSpawn.toLocation(World.world)
         spawn.yaw = -90f
 
-        player.player.velocity = Vector(0, 0, 0)
-        player.player.fallDistance = 0f
+        // Folia : velocity et fallDistance doivent être modifiés sur l'EntityScheduler du joueur
+        player.player.scheduler.run(IEP.instance, { _ ->
+            player.player.velocity = Vector(0, 0, 0)
+            player.player.fallDistance = 0f
+        }, null)
 
         generate(CompletableFuture.allOf(player.teleport(spawn)))
     }

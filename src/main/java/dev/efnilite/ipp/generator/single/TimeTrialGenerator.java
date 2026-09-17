@@ -72,7 +72,7 @@ public final class TimeTrialGenerator extends PlusGenerator {
 
         getMode().getLeaderboard().put(player.getUUID(), new Score(player.getName(), time, difficulty, score));
 
-        player.teleport(player.getLocation().subtract(0, 15, 0));
+        player.player.teleportAsync(player.player.getLocation().subtract(0, 15, 0));
     }
 
     @Override
