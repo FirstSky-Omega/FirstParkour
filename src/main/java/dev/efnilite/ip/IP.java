@@ -124,7 +124,7 @@ public final class IP extends ParkourPlugin {
         // ----- Events -----
 
         registerListener(new Events());
-        registerCommand("ip", new Command());
+        registerCommand("parkour", new Command());
 
         try {
             IPP.enable(this);

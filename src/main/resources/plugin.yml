@@ -1,21 +1,22 @@
-name: IP
+name: FirstParkour
 description: Unified block and elytra infinite parkour
 author: Creeper_可能c (aka. Maybe__c)
 contributors: [Efnilite]
 version: '${project.version}'
 api-version: '1.21.11'
+folia-supported: true
 main: dev.efnilite.ip.IP
 softdepend: [floodgate, Vault, PlaceholderAPI, Multiverse-Core, HolographicDisplays, Chunky]
 commands:
-  witp:
-    aliases: [parkour, ip]
+  parkour:
+    aliases: [witp, ip]
     usage: /<command> [arguments]
-    description: Main command for Infinite Parkour
-  ipp:
-    aliases: [ipplus]
+    description: Main command for FirstParkour
+  parkourplus:
+    aliases: [ipp, ipplus]
     usage: /<command> [arguments]
     description: Compatibility command for the former IPPlus features
-  iep:
-    aliases: [infiniteelytraparkour]
+  eparkour:
+    aliases: [iep, infiniteelytraparkour]
     usage: /<command> [arguments]
     description: Elytra parkour command

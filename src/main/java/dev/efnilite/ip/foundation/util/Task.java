@@ -1,10 +1,14 @@
 package dev.efnilite.ip.foundation.util;
 
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scheduler.BukkitTask;
+
+import java.lang.reflect.Field;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Class for easily constructing tasks.
@@ -25,86 +29,42 @@ public class Task {
         this.plugin = plugin;
     }
 
-    /**
-     * Returns a new Task instance
-     *
-     * @param plugin The plugin which to register this Task with
-     * @return the created Task instance
-     */
     public static Task create(Plugin plugin) {
         return new Task(plugin);
     }
 
-    /**
-     * Specifies which Java Runnable should be executed. This supports lambdas.
-     *
-     * @param runnable The Java Runnable that is going to be run
-     * @return the instance of the class
-     */
     public Task execute(Runnable runnable) {
         this.defaultRunnable = runnable;
         return this;
     }
 
-    /**
-     * Specifies which Bukkit Runnable should be executed
-     *
-     * @param runnable The Bukkit Runnable that is going to be run
-     * @return the instance of the class
-     */
     public Task execute(BukkitRunnable runnable) {
         this.bukkitRunnable = runnable;
         return this;
     }
 
-    /**
-     * Whether this task should run async
-     *
-     * @return the instance of this class
-     */
     public Task async() {
         this.async = true;
         return this;
     }
 
-    /**
-     * The delay this task will run with
-     *
-     * @param delay The delay in ticks
-     * @return the instance of this class
-     */
     public Task delay(int delay) {
         this.delay = delay;
         return this;
     }
 
-    /**
-     * The repeating interval this task will run with
-     *
-     * @param repeat The interval in ticks
-     * @return the instance of this class
-     */
     public Task repeat(int repeat) {
         this.repeat = repeat;
         return this;
     }
 
-    /**
-     * Cancels this task
-     *
-     * @return the instance of this class
-     */
     public Task cancel() {
         task.cancel();
         return this;
     }
 
-    /**
-     * Cancels the active/waiting task and runs the task immediately
-     */
     public void cancelAndRunImmediately() {
         task.cancel();
-
         if (bukkitRunnable != null) {
             bukkitRunnable.run();
         }
@@ -113,52 +73,88 @@ public class Task {
         }
     }
 
-    /**
-     * Runs this task
-     *
-     * @return the BukkitTask instance returned from running this task
-     */
     public BukkitTask run() {
-        if (bukkitRunnable != null) {
-            if (async) { // async
-                if (repeat > 0) {
-                    task = bukkitRunnable.runTaskTimerAsynchronously(plugin, delay, repeat);
-                } else if (delay > 0) {
-                    task = bukkitRunnable.runTaskLaterAsynchronously(plugin, delay);
-                } else {
-                    task = bukkitRunnable.runTaskAsynchronously(plugin);
-                }
-            } else {
-                if (repeat > 0) {
-                    task = bukkitRunnable.runTaskTimer(plugin, delay, repeat);
-                } else if (delay > 0) {
-                    task = bukkitRunnable.runTaskLater(plugin, delay);
-                } else {
-                    task = bukkitRunnable.runTask(plugin);
-                }
-            }
-        } else if (defaultRunnable != null) {
-            BukkitScheduler scheduler = Bukkit.getScheduler();
-            if (async) { // async
-                if (repeat > 0) {
-                    task = scheduler.runTaskTimerAsynchronously(plugin, defaultRunnable, delay, repeat);
-                } else if (delay > 0) {
-                    task = scheduler.runTaskLaterAsynchronously(plugin, defaultRunnable, delay);
-                } else {
-                    task = scheduler.runTaskAsynchronously(plugin, defaultRunnable);
-                }
-            } else {
-                if (repeat > 0) {
-                    task = scheduler.runTaskTimer(plugin, defaultRunnable, delay, repeat);
-                } else if (delay > 0) {
-                    task = scheduler.runTaskLater(plugin, defaultRunnable, delay);
-                } else {
-                    task = scheduler.runTask(plugin, defaultRunnable);
-                }
-            }
-        } else {
+        Runnable runnable = bukkitRunnable != null ? bukkitRunnable : defaultRunnable;
+        if (runnable == null) {
             throw new IllegalStateException("Both runnable types are null!");
         }
+
+        AtomicReference<ScheduledTask> scheduledTaskRef = new AtomicReference<>();
+        FoliaTask wrapper = new FoliaTask(plugin, scheduledTaskRef, !async);
+
+        if (bukkitRunnable != null) {
+            injectTask(bukkitRunnable, wrapper);
+        }
+
+        if (async) {
+            if (repeat > 0) {
+                long initialDelay = delay > 0 ? toMillis(delay) : 1L;
+                scheduledTaskRef.set(Bukkit.getServer().getAsyncScheduler()
+                        .runAtFixedRate(plugin, t -> runnable.run(), initialDelay, toMillis(repeat), TimeUnit.MILLISECONDS));
+            } else if (delay > 0) {
+                scheduledTaskRef.set(Bukkit.getServer().getAsyncScheduler()
+                        .runDelayed(plugin, t -> runnable.run(), toMillis(delay), TimeUnit.MILLISECONDS));
+            } else {
+                scheduledTaskRef.set(Bukkit.getServer().getAsyncScheduler()
+                        .runNow(plugin, t -> runnable.run()));
+            }
+        } else {
+            if (repeat > 0) {
+                long initialDelay = delay > 0 ? delay : 1L;
+                scheduledTaskRef.set(Bukkit.getServer().getGlobalRegionScheduler()
+                        .runAtFixedRate(plugin, t -> runnable.run(), initialDelay, repeat));
+            } else if (delay > 0) {
+                scheduledTaskRef.set(Bukkit.getServer().getGlobalRegionScheduler()
+                        .runDelayed(plugin, t -> runnable.run(), delay));
+            } else {
+                scheduledTaskRef.set(Bukkit.getServer().getGlobalRegionScheduler()
+                        .run(plugin, t -> runnable.run()));
+            }
+        }
+
+        task = wrapper;
         return task;
+    }
+
+    private static long toMillis(int ticks) {
+        return ticks * 50L;
+    }
+
+    private static void injectTask(BukkitRunnable runnable, BukkitTask task) {
+        try {
+            Field field = BukkitRunnable.class.getDeclaredField("task");
+            field.setAccessible(true);
+            field.set(runnable, task);
+        } catch (Exception ignored) {}
+    }
+
+    private record FoliaTask(Plugin plugin, AtomicReference<ScheduledTask> ref, boolean sync) implements BukkitTask {
+
+        @Override
+        public int getTaskId() {
+            return -1;
+        }
+
+        @Override
+        public Plugin getOwner() {
+            return plugin;
+        }
+
+        @Override
+        public boolean isSync() {
+            return sync;
+        }
+
+        @Override
+        public boolean isCancelled() {
+            ScheduledTask t = ref.get();
+            return t != null && t.isCancelled();
+        }
+
+        @Override
+        public void cancel() {
+            ScheduledTask t = ref.get();
+            if (t != null) t.cancel();
+        }
     }
 }

@@ -39,7 +39,7 @@ object IEP {
         styles.clear()
 
         plugin.registerListener(Events)
-        plugin.registerCommand("iep", Command)
+        plugin.registerCommand("eparkour", Command)
 
         saveFile("schematics/spawn-island")
 

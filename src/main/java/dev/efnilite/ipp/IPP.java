@@ -68,7 +68,7 @@ public final class IPP {
 
         // Events
         owner.registerListener(new PlusHandler());
-        owner.registerCommand("ipp", new PlusCommand());
+        owner.registerCommand("parkourplus", new PlusCommand());
 
         // Gamemode register
         registerMode(new PracticeMode());

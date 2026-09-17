@@ -42,7 +42,8 @@ public abstract class ParkourPlugin extends JavaPlugin {
         disable();
 
         HandlerList.unregisterAll(this);
-        Bukkit.getScheduler().cancelTasks(this);
+        Bukkit.getServer().getGlobalRegionScheduler().cancelTasks(this);
+        Bukkit.getServer().getAsyncScheduler().cancelTasks(this);
     }
 
     /**
