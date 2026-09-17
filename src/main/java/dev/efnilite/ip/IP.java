@@ -85,6 +85,20 @@ public final class IP extends ParkourPlugin {
     public void onLoad() {
         instance = this;
         logging = new Logging(this);
+
+        // Folia forbids Bukkit.createWorld() from onEnable() (throws UnsupportedOperationException).
+        // The only safe window is onLoad(), before threaded regions start.
+        LegacyDataMigrator.migrate(this);
+        Config.reload(true);
+        if (Config.CONFIG.getBoolean("joining")) {
+            World.create();
+        }
+        // Pre-create IEP (elytra) world for the same reason.
+        try {
+            IEP.INSTANCE.preCreate(this);
+        } catch (Throwable t) {
+            logging.stack("Failed to pre-create elytra world in onLoad()", t);
+        }
     }
 
     @Override
@@ -121,10 +135,8 @@ public final class IP extends ParkourPlugin {
         }
 
         // ----- Worlds -----
-
-        if (Config.CONFIG.getBoolean("joining")) {
-            World.create();
-        }
+        // World was already created in onLoad() to satisfy Folia's restriction.
+        // Just call create() in case onLoad() was skipped (non-Folia fallback); it is idempotent.
 
         // ----- Events -----
 

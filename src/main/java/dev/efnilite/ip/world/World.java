@@ -47,6 +47,12 @@ public class World {
             return;
         }
 
+        // Idempotent: if onLoad() already created the world, just re-apply settings.
+        if (world != null) {
+            setup();
+            return;
+        }
+
         boolean deleteOnReload = Config.CONFIG.getBoolean("world.delete-on-reload");
 
         // Step 1: if Bukkit has already loaded this world (e.g. from bukkit.yml or

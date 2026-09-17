@@ -32,6 +32,15 @@ object IEP {
     val logging: Logging
         get() = IP.logging()
 
+    /**
+     * Pre-creates the IEP world in onLoad(), the only window allowed by Folia
+     * (Bukkit.createWorld() throws UnsupportedOperationException from onEnable()).
+     */
+    fun preCreate(plugin: IP) {
+        instance = plugin
+        World.create()
+    }
+
     fun enable(plugin: IP) {
         instance = plugin
         stopping = false

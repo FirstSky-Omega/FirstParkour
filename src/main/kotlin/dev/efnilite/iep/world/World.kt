@@ -1,6 +1,7 @@
 package dev.efnilite.iep.world
 
 import dev.efnilite.iep.IEP
+import dev.efnilite.ip.IP
 import dev.efnilite.ip.foundation.util.VoidGenerator
 import org.bukkit.Bukkit
 import org.bukkit.Difficulty
@@ -38,7 +39,10 @@ object World {
      * Creates the world.
      */
     fun create() {
-        IEP.log("Creating world $NAME")
+        // Idempotent: if onLoad() already created the world, skip.
+        if (::world.isInitialized) return
+
+        IP.logging().info("[IEP] Creating world $NAME")
 
         // Step 1: if Bukkit already loaded our world, unload it so we can override
         // the generator below.
