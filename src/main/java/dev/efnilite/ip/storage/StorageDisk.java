@@ -81,6 +81,11 @@ class StorageDisk {
         try (FileReader reader = new FileReader(getPlayerFile(player))) {
             ParkourPlayer from = IP.getGson().fromJson(reader, ParkourPlayer.class);
 
+            if (from == null) {
+                player.setSettings(new HashMap<>());
+                return;
+            }
+
             Map<String, Object> settings = new HashMap<>();
 
             settings.put("style", from.style);
