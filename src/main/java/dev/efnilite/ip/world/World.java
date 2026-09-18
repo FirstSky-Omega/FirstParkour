@@ -265,7 +265,7 @@ public class World {
      */
     public static void tryRecover() {
         if (world != null) return;
-        if (name == null) name = Config.CONFIG.getString("world.name");
+        if (name == null) name = stripPrefix(Config.CONFIG.getString("world.name"));
         if (!Config.CONFIG.getBoolean("joining")) return;
 
         world = Bukkit.getWorld(name);
@@ -287,13 +287,11 @@ public class World {
     public static synchronized void lazyResolve() {
         if (world != null) return;
 
-        // Ensure name is resolved (handles "group:worldname" format from Worlds plugin).
-        if (name == null) {
-            String rawName = Config.CONFIG.getString("world.name");
-            name = (rawName != null && rawName.contains(":"))
-                    ? rawName.substring(rawName.lastIndexOf(':') + 1)
-                    : rawName;
-        }
+        // Always re-resolve from config and strip any "group:worldname" prefix.
+        // This guards against tryRecover() having set name to the raw value without stripping.
+        String rawName = (name != null) ? name : Config.CONFIG.getString("world.name");
+        name = stripPrefix(rawName);
+
         if (name == null) return;
 
         world = Bukkit.getWorld(name);
@@ -303,6 +301,11 @@ public class World {
         } else {
             IP.logging().error("Parkour world '%s' not found — is the world loaded on this server?".formatted(name));
         }
+    }
+
+    private static String stripPrefix(String raw) {
+        if (raw == null) return null;
+        return raw.contains(":") ? raw.substring(raw.lastIndexOf(':') + 1) : raw;
     }
 
     /**
