@@ -48,44 +48,36 @@ public class World {
             return;
         }
 
-        // Idempotent: if onLoad() already created the world, just re-apply settings.
+        // Idempotent: if we already have a reference, just re-apply settings.
         if (world != null) {
             setup();
             return;
         }
 
-        boolean deleteOnReload = Config.CONFIG.getBoolean("world.delete-on-reload");
-
-        // Step 1: if Bukkit has already loaded this world (e.g. from bukkit.yml or
-        // Multiverse), unload it so we can re-create with our generator. The
-        // unload() call won't save (we pass false) so we don't pollute the dir.
+        // If the server already loaded this world (e.g. from bukkit.yml with generator: FirstParkour
+        // after a previous patchBukkitYml() call), use it directly — do NOT unload and recreate,
+        // because Folia forbids Bukkit.createWorld() and we don't want to lose a correctly-loaded world.
         org.bukkit.World existing = Bukkit.getWorld(name);
         if (existing != null) {
-            IP.logging().warn("Parkour world '%s' was already loaded by something else; unloading it so IP can apply its void generator.".formatted(name));
-            existing.getPlayers().forEach(p -> p.kick(Component.text("Server is restarting")));
-            boolean unloaded = Bukkit.unloadWorld(existing, false);
-            if (!unloaded) {
-                IP.logging().error("Could not unload '%s'. Another plugin is keeping it loaded; the world will be left as-is and may NOT be void.".formatted(name));
-            }
+            world = existing;
+            IP.logging().info("Parkour world '%s' found in server world list — using it directly.".formatted(name));
+            setup();
+            verifyIsVoidOrWarn();
+            return;
         }
 
-        // Step 2: if configured to wipe-and-respawn, delete the world dir from disk
-        // so the next createWorld is a brand-new void world. The retry handles
-        // Windows file-lock races where Paper's chunk save threads still own the
-        // region files for a tick or two after unloadWorld returns.
-        if (deleteOnReload) {
+        // World not yet loaded — try to create it (works on non-Folia servers).
+        if (Config.CONFIG.getBoolean("world.delete-on-reload")) {
             deleteWorldOnDisk(2);
         }
 
         createWorld();
+
+        // createWorld() either threw (Folia rejected it, patchBukkitYml already called)
+        // or returned null. Either way, world is null here.
         if (world == null) {
-            // Folia may reject createWorld() even from onLoad(). Fall back to whatever
-            // the server already has loaded (e.g. auto-loaded from bukkit.yml).
-            world = Bukkit.getWorld(name);
-        }
-        if (world == null) {
-            IP.logging().error(("Parkour world '%s' could not be created. If running Folia, add " +
-                    "the following to bukkit.yml under 'worlds:' and restart: %s: {generator: IP}").formatted(name, name));
+            patchBukkitYml();
+            IP.logging().error("Parkour world '%s' unavailable this session — restart the server to apply the bukkit.yml fix.".formatted(name));
             return;
         }
         setup();
@@ -106,9 +98,8 @@ public class World {
             world = Bukkit.createWorld(creator);
         } catch (UnsupportedOperationException uoe) {
             // Folia forbids Bukkit.createWorld() from plugin lifecycle methods.
-            // Patch bukkit.yml so the server auto-loads this world on the next restart.
-            IP.logging().warn("Folia rejected Bukkit.createWorld() for world '%s' — patching bukkit.yml for next restart.".formatted(name));
-            patchBukkitYml();
+            // Caller (create()) will call patchBukkitYml() since world stays null.
+            IP.logging().warn("Folia rejected Bukkit.createWorld() for world '%s'.".formatted(name));
         } catch (Exception ex) {
             IP.logging().stack("Error while trying to create the parkour world", "delete the parkour world folder and restart the server", ex);
         }
