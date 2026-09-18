@@ -1,5 +1,6 @@
 package dev.efnilite.ipp.mode.multi;
 
+import dev.efnilite.ip.IP;
 import dev.efnilite.ip.leaderboard.Leaderboard;
 import dev.efnilite.ip.foundation.inventory.item.Item;
 import dev.efnilite.ip.mode.MultiMode;
@@ -9,6 +10,7 @@ import dev.efnilite.ip.session.Session;
 import dev.efnilite.ipp.config.PlusConfigOption;
 import dev.efnilite.ipp.config.PlusLocales;
 import dev.efnilite.ipp.generator.multi.DuelsGenerator;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -23,7 +25,10 @@ public final class DuelsMode implements MultiMode {
         player.closeInventory();
 
         Session.create(DuelsGenerator::new,
-                        session -> session.getPlayers().size() < PlusConfigOption.DUELS_MAX_COUNT && ((DuelsGenerator) session.generator).allowJoining,
+                        // Guard against null: generator is created async in Session.create()
+                        session -> session.generator != null
+                                && session.getPlayers().size() < PlusConfigOption.DUELS_MAX_COUNT
+                                && ((DuelsGenerator) session.generator).allowJoining,
                         null,
                         player);
     }
@@ -36,12 +41,15 @@ public final class DuelsMode implements MultiMode {
 
         player.closeInventory();
 
-        DuelsGenerator generator = (DuelsGenerator) session.generator;
-
         ParkourPlayer pp = ParkourUser.register(player, session);
         session.addPlayers(pp);
-        generator.addPlayer(pp);
-        pp.setup(null);
+
+        // On Folia, schematic paste (addPlayer) must run on the region thread owning
+        // the parkour spawn chunks. Schedule it there, then do player setup on entity thread.
+        Bukkit.getServer().getRegionScheduler().run(IP.getPlugin(), session.getSpawnLocation(), t -> {
+            ((DuelsGenerator) session.generator).addPlayer(pp);
+            pp.player.getScheduler().run(IP.getPlugin(), st -> pp.setup(null), null);
+        });
     }
 
     @Override
