@@ -92,7 +92,13 @@ public final class IP extends ParkourPlugin {
         // Folia forbids Bukkit.createWorld() from onEnable() (throws UnsupportedOperationException).
         // The only safe window is onLoad(), before threaded regions start.
         LegacyDataMigrator.migrate(this);
-        Config.reload(true);
+        try {
+            Config.reload(true);
+        } catch (Exception e) {
+            // On Folia, Locales/Schematics async tasks are rejected during onLoad() (plugin not yet enabled).
+            // Config files are loaded before this crash — enable() calls Config.reload() again to finish init.
+            logging.warn("Post-load async init skipped during onLoad (Folia): " + e.getMessage());
+        }
         if (Config.CONFIG.getBoolean("joining")) {
             World.create();
         }

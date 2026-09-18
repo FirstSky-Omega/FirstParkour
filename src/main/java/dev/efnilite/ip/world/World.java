@@ -66,8 +66,7 @@ public class World {
         if (existing != null) {
             world = existing;
             IP.logging().info("Parkour world '%s' found in server world list — using it directly.".formatted(name));
-            setup();
-            verifyIsVoidOrWarn();
+            scheduleSetup();
             return;
         }
 
@@ -85,9 +84,7 @@ public class World {
             IP.logging().error("Parkour world '%s' unavailable this session — restart the server to apply the bukkit.yml fix.".formatted(name));
             return;
         }
-        setup();
-
-        verifyIsVoidOrWarn();
+        scheduleSetup();
     }
 
     private static void createWorld() {
@@ -148,6 +145,21 @@ public class World {
         } catch (Exception e) {
             IP.logging().stack("Failed to patch bukkit.yml", e);
             IP.logging().warn("Manual fix: add this to bukkit.yml under 'worlds:': %s: {generator: FirstParkour}".formatted(name));
+        }
+    }
+
+    // On Folia, setGameRule / setDifficulty / getWorldBorder require the global region thread.
+    // During onLoad() and onEnable() we are NOT on that thread, so schedule via GlobalRegionScheduler.
+    private static void scheduleSetup() {
+        try {
+            Bukkit.getServer().getGlobalRegionScheduler().run(IP.getPlugin(), task -> {
+                setup();
+                verifyIsVoidOrWarn();
+            });
+        } catch (Exception e) {
+            // Fallback for non-Folia servers or if scheduler unavailable during early init
+            setup();
+            verifyIsVoidOrWarn();
         }
     }
 
@@ -271,7 +283,7 @@ public class World {
         world = Bukkit.getWorld(name);
         if (world != null) {
             IP.logging().info("Parkour world '%s' recovered from server world list.".formatted(name));
-            setup();
+            scheduleSetup();
         } else {
             IP.logging().error("Parkour world '%s' is still null — parkour is not available this session.".formatted(name));
             IP.logging().error("If the startup log shows '=== FOLIA WORLD FIX ===', a bukkit.yml entry was written — restart once more.");
@@ -297,7 +309,7 @@ public class World {
         world = Bukkit.getWorld(name);
         if (world != null) {
             IP.logging().info("Parkour world '%s' resolved on first session (lazy).".formatted(name));
-            setup();
+            scheduleSetup();
         } else {
             IP.logging().error("Parkour world '%s' not found — is the world loaded on this server?".formatted(name));
         }
