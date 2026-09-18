@@ -7,6 +7,7 @@ import dev.efnilite.ip.player.ParkourPlayer;
 import dev.efnilite.ip.player.ParkourSpectator;
 import dev.efnilite.ip.player.ParkourUser;
 import dev.efnilite.ip.world.Divider;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -99,7 +100,12 @@ public class Session {
             pps.forEach(p -> p.updateGeneratorSettings(session.generator));
         }
 
-        session.generator.island.build(session.spawnLocation);
+        // On Folia, block modifications (schematic paste, setType) must run on the region thread
+        // that owns the target chunks. Schedule island build on the parkour world region scheduler.
+        final Location spawnLoc = session.spawnLocation;
+        Bukkit.getServer().getRegionScheduler().run(IP.getPlugin(), spawnLoc, t -> {
+            session.generator.island.build(spawnLoc);
+        });
 
         return session;
     }

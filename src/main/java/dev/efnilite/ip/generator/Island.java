@@ -67,7 +67,11 @@ public final class Island {
 
             session.generator.generateFirst(ps, parkour.getLocation().subtract(session.generator.heading).subtract(0, 1, 0));
             session.generator.startTick();
-            session.getPlayers().forEach(pp -> pp.setup(ps));
+            // On Folia, player operations (setGameMode, inventory) require the entity thread.
+            final Location finalPs = ps;
+            session.getPlayers().forEach(pp ->
+                pp.player.getScheduler().run(IP.getPlugin(), t -> pp.setup(finalPs), null)
+            );
         } catch (NoSuchElementException ex) {
             IP.logging().stack("Error while trying to find parkour or player spawn in schematic %s".formatted(schematic.getFile().getName()),
                     "check if you used the same material as the one in generation.yml", ex);
