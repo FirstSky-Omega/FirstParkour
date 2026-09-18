@@ -8,6 +8,7 @@ import org.bukkit.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -103,8 +104,54 @@ public class World {
                     .environment(org.bukkit.World.Environment.NORMAL);
 
             world = Bukkit.createWorld(creator);
+        } catch (UnsupportedOperationException uoe) {
+            // Folia forbids Bukkit.createWorld() from plugin lifecycle methods.
+            // Patch bukkit.yml so the server auto-loads this world on the next restart.
+            IP.logging().warn("Folia rejected Bukkit.createWorld() for world '%s' — patching bukkit.yml for next restart.".formatted(name));
+            patchBukkitYml();
         } catch (Exception ex) {
             IP.logging().stack("Error while trying to create the parkour world", "delete the parkour world folder and restart the server", ex);
+        }
+    }
+
+    /**
+     * Adds the parkour world to bukkit.yml so Folia auto-loads it with the IP void generator
+     * on the next server restart. Safe to call from onLoad() — only file I/O, no Bukkit API.
+     */
+    private static void patchBukkitYml() {
+        try {
+            File file = new File("bukkit.yml");
+            if (!file.exists()) {
+                IP.logging().warn("bukkit.yml not found — cannot auto-configure parkour world. " +
+                        "Manually add: worlds: { " + name + ": { generator: FirstParkour } }");
+                return;
+            }
+
+            String content = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+
+            // Already configured — don't add twice.
+            if (content.contains(name + ":")) {
+                IP.logging().warn("World '%s' already present in bukkit.yml but still not loaded — check your generator entry.".formatted(name));
+                return;
+            }
+
+            String entry = "  " + name + ":\n    generator: FirstParkour\n";
+
+            if (content.contains("worlds:")) {
+                content = content.replaceFirst("worlds:\\s*\n", "worlds:\n" + entry);
+            } else {
+                if (!content.endsWith("\n")) content += "\n";
+                content += "worlds:\n" + entry;
+            }
+
+            Files.writeString(file.toPath(), content, StandardCharsets.UTF_8);
+            IP.logging().warn("=== FOLIA WORLD FIX ===");
+            IP.logging().warn("Parkour world '%s' added to bukkit.yml with generator 'FirstParkour'.".formatted(name));
+            IP.logging().warn("RESTART the server once more — the world will load automatically from then on.");
+            IP.logging().warn("======================");
+        } catch (Exception e) {
+            IP.logging().stack("Failed to patch bukkit.yml", e);
+            IP.logging().warn("Manual fix: add this to bukkit.yml under 'worlds:': %s: {generator: FirstParkour}".formatted(name));
         }
     }
 
@@ -230,9 +277,8 @@ public class World {
             IP.logging().info("Parkour world '%s' recovered from server world list.".formatted(name));
             setup();
         } else {
-            IP.logging().error(("Parkour world '%s' is still null in onEnable(). " +
-                    "If running Folia, add '%s: {generator: IP}' under 'worlds:' in bukkit.yml " +
-                    "so the server auto-loads it, then restart.").formatted(name, name));
+            IP.logging().error("Parkour world '%s' is still null — parkour is not available this session.".formatted(name));
+            IP.logging().error("If the startup log shows '=== FOLIA WORLD FIX ===', a bukkit.yml entry was written — restart once more.");
         }
     }
 
