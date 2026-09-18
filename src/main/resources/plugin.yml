@@ -12,10 +12,6 @@ commands:
     aliases: [witp, ip]
     usage: /<command> [arguments]
     description: Main command for FirstParkour
-  parkourplus:
-    aliases: [ipp, ipplus]
-    usage: /<command> [arguments]
-    description: Compatibility command for the former IPPlus features
   eparkour:
     aliases: [iep, infiniteelytraparkour]
     usage: /<command> [arguments]

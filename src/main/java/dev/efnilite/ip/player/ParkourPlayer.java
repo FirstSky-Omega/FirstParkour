@@ -56,7 +56,9 @@ public class ParkourPlayer extends ParkourUser {
         }));
         PLAYER_COLUMNS.put("locale", new OptionContainer(ParkourOption.LANG, (player, v) -> {
             player._locale = v;
-            player.locale = v;
+            // locale is intentionally NOT overridden here: always use the config default
+            // (Option.OPTIONS_DEFAULTS.get(ParkourOption.LANG)) so all players see the
+            // server-configured language regardless of what was previously saved.
         }));
         PLAYER_COLUMNS.put("schematicDifficulty", new OptionContainer(ParkourOption.SCHEMATICS, (player, v) -> player.schematicDifficulty = Double.parseDouble(v)));
         PLAYER_COLUMNS.put("sound", new OptionContainer(ParkourOption.SOUND, (player, v) -> player.sound = parseBoolean(v)));
