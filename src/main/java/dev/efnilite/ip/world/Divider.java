@@ -30,6 +30,11 @@ public class Divider {
      * @param session The session.
      */
     public static synchronized Location add(Session session) {
+        // Lazy resolution: the world manager plugin may have loaded the world AFTER
+        // our onEnable() ran. The first player click always happens after the server
+        // is fully started, so by now the world is guaranteed to be available.
+        World.lazyResolve();
+
         if (World.getWorld() == null) {
             throw new IllegalStateException("Cannot create parkour session: parkour world is not loaded. Check startup logs for world creation errors.");
         }

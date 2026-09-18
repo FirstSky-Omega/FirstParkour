@@ -279,6 +279,33 @@ public class World {
     }
 
     /**
+     * Called lazily from Divider.add() the first time a session is created. By that
+     * point the server is fully running and world managers (Multiverse, Worlds, etc.)
+     * have already loaded their worlds, so Bukkit.getWorld() is guaranteed to find
+     * any world that is running — regardless of plugin enable order.
+     */
+    public static synchronized void lazyResolve() {
+        if (world != null) return;
+
+        // Ensure name is resolved (handles "group:worldname" format from Worlds plugin).
+        if (name == null) {
+            String rawName = Config.CONFIG.getString("world.name");
+            name = (rawName != null && rawName.contains(":"))
+                    ? rawName.substring(rawName.lastIndexOf(':') + 1)
+                    : rawName;
+        }
+        if (name == null) return;
+
+        world = Bukkit.getWorld(name);
+        if (world != null) {
+            IP.logging().info("Parkour world '%s' resolved on first session (lazy).".formatted(name));
+            setup();
+        } else {
+            IP.logging().error("Parkour world '%s' not found — is the world loaded on this server?".formatted(name));
+        }
+    }
+
+    /**
      * @return the name of the parkour world.
      */
     public static String getName() {
