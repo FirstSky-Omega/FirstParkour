@@ -42,7 +42,12 @@ public class World {
      * </ol>
      */
     public static void create() {
-        name = Config.CONFIG.getString("world.name");
+        String rawName = Config.CONFIG.getString("world.name");
+        // Handle Multiverse "group:worldname" references (e.g. "worlds:parkour" → "parkour").
+        // Bukkit.getWorld() and WorldCreator both expect the bare folder/world name.
+        name = (rawName != null && rawName.contains(":"))
+                ? rawName.substring(rawName.lastIndexOf(':') + 1)
+                : rawName;
 
         if (!Config.CONFIG.getBoolean("joining")) {
             return;
