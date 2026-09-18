@@ -86,18 +86,23 @@ public class Events implements EventWatcher {
             return;
         }
 
+        // On Folia, teleportAsync() during PlayerJoinEvent crashes because the entity is
+        // not yet fully placed in the world. Defer one tick via the entity scheduler.
         org.bukkit.World fallback = Bukkit.getWorld(Config.CONFIG.getString("world.fall-back"));
 
+        final Location destination;
         if (fallback != null) {
-            player.teleportAsync(fallback.getSpawnLocation(), PlayerTeleportEvent.TeleportCause.PLUGIN);
-            return;
+            destination = fallback.getSpawnLocation();
+        } else {
+            destination = Bukkit.getWorlds().stream()
+                    .filter(world -> !world.equals(World.getWorld()))
+                    .findAny()
+                    .orElseThrow(() -> new NoSuchElementException("No fallback world was found!"))
+                    .getSpawnLocation();
         }
 
-        player.teleportAsync(Bukkit.getWorlds().stream()
-                .filter(world -> !world.equals(World.getWorld()))
-                .findAny()
-                .orElseThrow(() -> new NoSuchElementException("No fallback world was found!"))
-                .getSpawnLocation(), PlayerTeleportEvent.TeleportCause.PLUGIN);
+        player.getScheduler().run(IP.getPlugin(), t ->
+                player.teleportAsync(destination, PlayerTeleportEvent.TeleportCause.PLUGIN), null);
     }
 
     @EventHandler
