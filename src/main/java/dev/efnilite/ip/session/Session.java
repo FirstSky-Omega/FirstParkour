@@ -94,16 +94,20 @@ public class Session {
         }
 
         session.spawnLocation = Divider.add(session);
-        session.generator = generatorFunction.apply(session);
 
-        if (players != null) {
-            pps.forEach(p -> p.updateGeneratorSettings(session.generator));
-        }
-
-        // On Folia, block modifications (schematic paste, setType) must run on the region thread
-        // that owns the target chunks. Schedule island build on the parkour world region scheduler.
+        // On Folia, ALL block modifications (generator init, schematic paste, setType) must run
+        // on the region thread owning the spawn location's chunks. Some generators (e.g. DuelsGenerator)
+        // call schematic.paste() directly in their constructors, so generatorFunction.apply() must
+        // also be inside this scheduled task.
         final Location spawnLoc = session.spawnLocation;
+        final List<ParkourPlayer> finalPps = pps;
         Bukkit.getServer().getRegionScheduler().run(IP.getPlugin(), spawnLoc, t -> {
+            session.generator = generatorFunction.apply(session);
+
+            if (players != null) {
+                finalPps.forEach(p -> p.updateGeneratorSettings(session.generator));
+            }
+
             session.generator.island.build(spawnLoc);
         });
 

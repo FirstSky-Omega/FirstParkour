@@ -66,12 +66,19 @@ public final class Island {
             ps.setPitch(Config.GENERATION.getInt("advanced.island.spawn.pitch"));
 
             session.generator.generateFirst(ps, parkour.getLocation().subtract(session.generator.heading).subtract(0, 1, 0));
-            session.generator.startTick();
-            // On Folia, player operations (setGameMode, inventory) require the entity thread.
+            // Do NOT call startTick() here: the entity scheduler would tick on the player's
+            // current region (still SuperiorSkyblock/lobby) and fail to read parkour blocks.
+            // Instead, teleport each player async and start the tick AFTER they arrive.
             final Location finalPs = ps;
-            session.getPlayers().forEach(pp ->
-                pp.player.getScheduler().run(IP.getPlugin(), t -> pp.setup(finalPs), null)
-            );
+            session.getPlayers().forEach(pp -> pp.player.teleportAsync(finalPs).thenRun(() ->
+                pp.player.getScheduler().run(IP.getPlugin(), t -> {
+                    // Entity is now in the parkour world — entity scheduler ticks on parkour region.
+                    if (pp == session.generator.player) {
+                        session.generator.startTick();
+                    }
+                    pp.setup(null);  // null = teleport already done; just apply gamemode/inventory
+                }, null)
+            ));
         } catch (NoSuchElementException ex) {
             IP.logging().stack("Error while trying to find parkour or player spawn in schematic %s".formatted(schematic.getFile().getName()),
                     "check if you used the same material as the one in generation.yml", ex);
