@@ -22,6 +22,9 @@ import dev.efnilite.ip.foundation.inventory.Menu;
 import dev.efnilite.ip.foundation.util.Logging;
 import dev.efnilite.ip.foundation.util.UpdateChecker;
 import dev.efnilite.ip.foundation.util.VoidGenerator;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.generator.ChunkGenerator;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -136,8 +139,19 @@ public final class IP extends ParkourPlugin {
 
         // ----- Worlds -----
         // World was created in onLoad(). If that failed (e.g. Folia rejected createWorld()),
-        // try to recover: the server may have auto-loaded the world via bukkit.yml.
+        // try to recover now. If still null, world managers (e.g. "Worlds" plugin) may not
+        // have enabled yet — register a ServerLoadEvent listener as a last-resort fallback.
         World.tryRecover();
+        if (Config.CONFIG.getBoolean("joining") && World.getWorld() == null) {
+            getServer().getPluginManager().registerEvents(new Listener() {
+                @EventHandler
+                public void onServerLoad(ServerLoadEvent event) {
+                    if (World.getWorld() == null) {
+                        World.tryRecover();
+                    }
+                }
+            }, this);
+        }
 
         // ----- Events -----
 
