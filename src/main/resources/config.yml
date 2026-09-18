@@ -23,7 +23,7 @@ debug: false
 # -= Elytra parkour =-
 # Set to false to completely disable the /eparkour module.
 elytra:
-  enabled: true
+  enabled: false
 
 # -= Enable joining =-
 # Whether players can join the parkour.
