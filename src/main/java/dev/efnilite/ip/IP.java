@@ -173,11 +173,13 @@ public final class IP extends ParkourPlugin {
             logging.stack("Failed to enable the former IPPlus modes", t);
         }
 
-        try {
-            IEP.INSTANCE.enable(this);
-            elytraEnabled = true;
-        } catch (Throwable t) {
-            logging.stack("Failed to enable elytra parkour", t);
+        if (Config.CONFIG.getBoolean("elytra.enabled")) {
+            try {
+                IEP.INSTANCE.enable(this);
+                elytraEnabled = true;
+            } catch (Throwable t) {
+                logging.stack("Failed to enable elytra parkour", t);
+            }
         }
 
         serverIntegrations = IntegrationLoader.enable(this);

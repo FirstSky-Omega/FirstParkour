@@ -20,6 +20,11 @@
 # -= Debugging =-
 debug: false
 
+# -= Elytra parkour =-
+# Set to false to completely disable the /eparkour module.
+elytra:
+  enabled: true
+
 # -= Enable joining =-
 # Whether players can join the parkour.
 # When joining is disabled, the IP instance on this server will only read data from leaderboard databases.

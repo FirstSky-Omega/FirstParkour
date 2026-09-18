@@ -9,7 +9,6 @@ Regroupe le parkour bloc, les modes avancés (IPPlus) et le parkour élytra en u
 
 - **Parkour bloc infini** — génération procédurale de blocs, scores et classements
 - **Modes avancés** — Practice, Speed, SuperJump, TimeTrial et plus via le menu en jeu
-- **Parkour élytra** — circuits en vol libre avec obstacles via `/eparkour`
 - **Hologrammes** — classements en temps réel dans le monde
 - **PlaceholderAPI** — intégration complète pour afficher les stats partout
 - **Compatibilité Folia** — RegionScheduler, GlobalRegionScheduler et EntityScheduler sur tous les chemins critiques
@@ -23,7 +22,6 @@ Regroupe le parkour bloc, les modes avancés (IPPlus) et le parkour élytra en u
 | Commande | Description |
 |---|---|
 | `/parkour` | Commande principale du parkour bloc |
-| `/eparkour` | Parkour élytra |
 
 > Les modes avancés (Practice, Duels, Speed, etc.) sont accessibles uniquement via le menu en jeu — la commande `/ipp` a été supprimée.
 
