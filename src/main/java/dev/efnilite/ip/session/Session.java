@@ -166,8 +166,18 @@ public class Session {
         }
 
         if (toRemove.length > 0 && players.isEmpty()) {
-            generator.reset(false);
-            Divider.remove(this);
+            if (generator != null) {
+                // On Folia, block clearing (setType AIR) must run on the region thread owning
+                // the parkour spawn chunks. Divider.remove() is deferred until after cleanup
+                // so the section slot is not reused before the old blocks are gone.
+                final Location cleanupLoc = spawnLocation.clone();
+                Bukkit.getServer().getRegionScheduler().run(IP.getPlugin(), cleanupLoc, t -> {
+                    generator.reset(false);
+                    Divider.remove(this);
+                });
+            } else {
+                Divider.remove(this);
+            }
         }
     }
 
