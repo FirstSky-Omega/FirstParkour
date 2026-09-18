@@ -30,6 +30,10 @@ public class Divider {
      * @param session The session.
      */
     public static synchronized Location add(Session session) {
+        if (World.getWorld() == null) {
+            throw new IllegalStateException("Cannot create parkour session: parkour world is not loaded. Check startup logs for world creation errors.");
+        }
+
         // attempts to get the closest available section to the center
         var missing = IntStream.range(0, sections.size() + 1)
                 .filter(i -> !sections.containsValue(i))

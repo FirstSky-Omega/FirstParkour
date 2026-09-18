@@ -78,7 +78,13 @@ public class World {
 
         createWorld();
         if (world == null) {
-            IP.logging().error("Parkour world '%s' is null after createWorld() — IP will not work this session.".formatted(name));
+            // Folia may reject createWorld() even from onLoad(). Fall back to whatever
+            // the server already has loaded (e.g. auto-loaded from bukkit.yml).
+            world = Bukkit.getWorld(name);
+        }
+        if (world == null) {
+            IP.logging().error(("Parkour world '%s' could not be created. If running Folia, add " +
+                    "the following to bukkit.yml under 'worlds:' and restart: %s: {generator: IP}").formatted(name, name));
             return;
         }
         setup();
@@ -206,6 +212,27 @@ public class World {
 
         if (file.exists()) {
             IP.logging().error("Failed to delete '%s/' after %d attempts. Stop the server cleanly and remove the directory manually before next startup, or the world may load with the wrong generator.".formatted(name, attempts));
+        }
+    }
+
+    /**
+     * Called from onEnable() as a last-resort fallback when onLoad() world creation
+     * was rejected (e.g. Folia timing restriction). Checks whether the server auto-loaded
+     * the world from bukkit.yml and wires up our reference without calling createWorld().
+     */
+    public static void tryRecover() {
+        if (world != null) return;
+        if (name == null) name = Config.CONFIG.getString("world.name");
+        if (!Config.CONFIG.getBoolean("joining")) return;
+
+        world = Bukkit.getWorld(name);
+        if (world != null) {
+            IP.logging().info("Parkour world '%s' recovered from server world list.".formatted(name));
+            setup();
+        } else {
+            IP.logging().error(("Parkour world '%s' is still null in onEnable(). " +
+                    "If running Folia, add '%s: {generator: IP}' under 'worlds:' in bukkit.yml " +
+                    "so the server auto-loads it, then restart.").formatted(name, name));
         }
     }
 

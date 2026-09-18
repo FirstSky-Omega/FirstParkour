@@ -135,8 +135,9 @@ public final class IP extends ParkourPlugin {
         }
 
         // ----- Worlds -----
-        // World was already created in onLoad() to satisfy Folia's restriction.
-        // Just call create() in case onLoad() was skipped (non-Folia fallback); it is idempotent.
+        // World was created in onLoad(). If that failed (e.g. Folia rejected createWorld()),
+        // try to recover: the server may have auto-loaded the world via bukkit.yml.
+        World.tryRecover();
 
         // ----- Events -----
 
