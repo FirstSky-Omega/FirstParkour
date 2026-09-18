@@ -20,10 +20,10 @@ Regroupe le parkour bloc, les modes avancés (IPPlus) et le parkour élytra en u
 
 ## Commandes
 
-| Commande | Alias | Description |
-|---|---|---|
-| `/parkour` | `/witp`, `/ip` | Commande principale du parkour bloc |
-| `/eparkour` | `/iep` | Parkour élytra |
+| Commande | Description |
+|---|---|
+| `/parkour` | Commande principale du parkour bloc |
+| `/eparkour` | Parkour élytra |
 
 > Les modes avancés (Practice, Duels, Speed, etc.) sont accessibles uniquement via le menu en jeu — la commande `/ipp` a été supprimée.
 
