@@ -8,11 +8,13 @@ Regroupe le parkour bloc, les modes avancés (IPPlus) et le parkour élytra en u
 ## Fonctionnalités
 
 - **Parkour bloc infini** — génération procédurale de blocs, scores et classements
-- **Modes avancés** — Practice, Speed, SuperJump, TimeTrial et plus via `/parkourplus`
+- **Modes avancés** — Practice, Speed, SuperJump, TimeTrial et plus via le menu en jeu
 - **Parkour élytra** — circuits en vol libre avec obstacles via `/eparkour`
 - **Hologrammes** — classements en temps réel dans le monde
 - **PlaceholderAPI** — intégration complète pour afficher les stats partout
-- **Compatibilité Folia** — scheduler GlobalRegion + Async, aucun appel Bukkit bloquant
+- **Compatibilité Folia** — RegionScheduler, GlobalRegionScheduler et EntityScheduler sur tous les chemins critiques
+- **Scoreboard TAB** — scoreboard interne désactivé, intégration via PlaceholderAPI (`%witp_score%`, `%witp_time%`, etc.)
+- **Langue forcée** — langue serveur (français) appliquée à tous les joueurs, indépendamment des préférences sauvegardées
 
 ---
 
@@ -21,8 +23,9 @@ Regroupe le parkour bloc, les modes avancés (IPPlus) et le parkour élytra en u
 | Commande | Alias | Description |
 |---|---|---|
 | `/parkour` | `/witp`, `/ip` | Commande principale du parkour bloc |
-| `/parkourplus` | `/ipp`, `/ipplus` | Modes de jeu avancés |
 | `/eparkour` | `/iep` | Parkour élytra |
+
+> Les modes avancés (Practice, Duels, Speed, etc.) sont accessibles uniquement via le menu en jeu — la commande `/ipp` a été supprimée.
 
 ---
 
