@@ -75,6 +75,22 @@ public class PAPIHook extends PlaceholderExpansion {
         } else if (params.contains("difficulty_string_rank_")) {
             return getInfiniteScore(params.replace("difficulty_string_rank_", ""),
                     score -> parseDifficulty(Double.parseDouble(score.difficulty().contains("?") ? "2" : score.difficulty())));
+        } else if (params.startsWith("top_") && params.endsWith("_player")) {
+            // %witp_top_1_player% → name of rank-N player
+            String rankStr = params.substring(4, params.length() - 7);
+            try {
+                int rank = Integer.parseInt(rankStr);
+                Score score = Modes.DEFAULT.getLeaderboard().getScoreAtRank(rank);
+                return score != null ? score.name() : "?";
+            } catch (NumberFormatException e) { return "?"; }
+        } else if (params.startsWith("top_") && params.endsWith("_score")) {
+            // %witp_top_1_score% → score of rank-N player
+            String rankStr = params.substring(4, params.length() - 6);
+            try {
+                int rank = Integer.parseInt(rankStr);
+                Score score = Modes.DEFAULT.getLeaderboard().getScoreAtRank(rank);
+                return score != null ? Integer.toString(score.score()) : "?";
+            } catch (NumberFormatException e) { return "?"; }
         }
 
         // placeholders that require player
