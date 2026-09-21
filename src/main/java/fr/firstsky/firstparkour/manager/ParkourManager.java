@@ -1,6 +1,7 @@
 package fr.firstsky.firstparkour.manager;
 
 import fr.firstsky.firstparkour.FirstParkour;
+import fr.firstsky.firstparkour.model.BlockTheme;
 import fr.firstsky.firstparkour.model.Difficulty;
 import fr.firstsky.firstparkour.model.PlayerData;
 import fr.firstsky.firstparkour.model.ParkourSession;
@@ -30,7 +31,6 @@ public class ParkourManager {
         this.generator = new BlockGenerator(plugin);
     }
 
-    /** Charge les données du joueur en async (à appeler à la connexion) */
     public void loadPlayerAsync(Player player) {
         FoliaUtil.runAsync(plugin, () -> {
             PlayerData data = plugin.getDatabaseManager().loadPlayer(player.getUniqueId(), player.getName());
@@ -38,7 +38,6 @@ public class ParkourManager {
         });
     }
 
-    /** Sauvegarde et retire les données du joueur (à la déconnexion) */
     public void unloadPlayer(Player player) {
         stopSession(player, false);
         PlayerData data = playerDataCache.remove(player.getUniqueId());
@@ -55,7 +54,6 @@ public class ParkourManager {
         return sessions.get(player.getUniqueId());
     }
 
-    /** Démarre une session parkour pour un joueur */
     public void startSession(Player player, Difficulty difficulty) {
         if (isPlaying(player)) {
             MessageUtil.send(player, plugin.getConfig().getString("messages.prefix", "")
@@ -68,31 +66,25 @@ public class ParkourManager {
 
         int personalBest = data.getBestScore(difficulty);
         int historySize = plugin.getConfig().getInt("parkour.history-size", 12);
-
         ParkourSession session = new ParkourSession(player.getUniqueId(), difficulty, personalBest, historySize);
+        session.setTheme(data.getTheme());
 
-        // Initialise l'angle sur la direction du joueur (yaw → radians)
         float yaw = player.getLocation().getYaw();
         session.setCurrentAngle(Math.toRadians(yaw));
 
-        // Bloc de départ = bloc sous les pieds du joueur
         Location startLoc = player.getLocation().getBlock().getLocation();
         session.addBlock(startLoc);
         session.setLastLandedBlock(startLoc);
 
         sessions.put(player.getUniqueId(), session);
 
-        // Sauvegarde le gamemode et force ADVENTURE si configuré
         if (plugin.getConfig().getBoolean("parkour.force-adventure", true)) {
             previousGameModes.put(player.getUniqueId(), player.getGameMode());
             FoliaUtil.runForEntity(plugin, player, () -> player.setGameMode(GameMode.ADVENTURE));
         }
 
-        // Pré-génère les blocs initiaux
         int blocksAhead = plugin.getConfig().getInt("parkour.blocks-ahead", 3);
-        for (int i = 0; i < blocksAhead; i++) {
-            placeNextBlock(session);
-        }
+        for (int i = 0; i < blocksAhead; i++) placeNextBlock(session);
 
         String diffName = plugin.getConfig().getString("difficulties." + difficulty.getKey() + ".display-name", difficulty.getKey());
         String msg = plugin.getConfig().getString("messages.prefix", "")
@@ -101,40 +93,43 @@ public class ParkourManager {
         FoliaUtil.runForEntity(plugin, player, () -> MessageUtil.send(player, msg));
     }
 
-    /** Appelé quand le joueur atterrit sur un bloc de parkour */
     public void onPlayerLand(Player player, ParkourSession session, Location landedOn) {
         session.setLastLandedBlock(landedOn);
         session.incrementScore();
 
-        // Met à jour les données en cache
         PlayerData data = playerDataCache.get(player.getUniqueId());
-        if (data != null) {
-            data.updateBestScore(session.getDifficulty(), session.getScore());
-        }
+        if (data != null) data.updateBestScore(session.getDifficulty(), session.getScore());
 
-        // Nouveau record ?
-        boolean newRecord = session.getScore() > session.getPersonalBest() - 1
-                && session.getScore() == session.getPersonalBest();
+        boolean newRecord = session.getScore() == session.getPersonalBest() && session.getScore() > 1;
 
-        // Génère le prochain bloc
         placeNextBlock(session);
 
-        // Supprime l'ancien bloc si nécessaire
         Location toRemove = session.pollOldestIfNeeded();
         if (toRemove != null) {
             FoliaUtil.runAtLocation(plugin, toRemove, () -> toRemove.getBlock().setType(Material.AIR));
         }
 
-        // Met à jour l'action bar
         if (plugin.getConfig().getBoolean("parkour.action-bar", true)) {
-            String msg = plugin.getConfig().getString("messages.score-actionbar",
+            boolean inDuel = plugin.getDuelManager().isInDuel(player);
+            String duelPart = "";
+            if (inDuel) {
+                UUID opponentUuid = plugin.getDuelManager().getDuel(player).getOpponent(player.getUniqueId());
+                Player opponent = plugin.getServer().getPlayer(opponentUuid);
+                if (opponent != null) {
+                    ParkourSession opSession = getSession(opponent);
+                    int opScore = opSession != null ? opSession.getScore() : 0;
+                    duelPart = " &8| &c⚔ " + opponent.getName() + ": &e" + opScore;
+                }
+            }
+            String msg = (plugin.getConfig().getString("messages.score-actionbar",
                             "&6Score: &e{score} &7| &6Record: &e{best}")
                     .replace("{score}", String.valueOf(session.getScore()))
-                    .replace("{best}", String.valueOf(session.getPersonalBest()));
+                    .replace("{best}", String.valueOf(session.getPersonalBest())))
+                    + duelPart;
             FoliaUtil.runForEntity(plugin, player, () -> MessageUtil.sendActionBar(player, msg));
         }
 
-        if (newRecord && session.getScore() > 1) {
+        if (newRecord) {
             String msg = plugin.getConfig().getString("messages.prefix", "")
                     + plugin.getConfig().getString("messages.new-record", "&6RECORD!")
                             .replace("{score}", String.valueOf(session.getScore()));
@@ -142,25 +137,20 @@ public class ParkourManager {
         }
     }
 
-    /** Arrête la session parkour du joueur */
     public void stopSession(Player player, boolean sendMessage) {
         ParkourSession session = sessions.remove(player.getUniqueId());
         if (session == null) return;
-
         session.setActive(false);
 
-        // Supprime tous les blocs actifs
         for (Location loc : session.getAllBlocks()) {
             FoliaUtil.runAtLocation(plugin, loc, () -> loc.getBlock().setType(Material.AIR));
         }
 
-        // Restaure le gamemode
         GameMode prev = previousGameModes.remove(player.getUniqueId());
         if (prev != null) {
             FoliaUtil.runForEntity(plugin, player, () -> player.setGameMode(prev));
         }
 
-        // Sauvegarde le score
         PlayerData data = playerDataCache.get(player.getUniqueId());
         if (data != null) {
             data.updateBestScore(session.getDifficulty(), session.getScore());
@@ -168,7 +158,6 @@ public class ParkourManager {
             FoliaUtil.runAsync(plugin, () -> plugin.getDatabaseManager().savePlayer(data));
         }
 
-        // Rafraîchit le classement
         plugin.getLeaderboardManager().forceRefresh();
 
         if (sendMessage) {
@@ -179,7 +168,6 @@ public class ParkourManager {
         }
     }
 
-    /** Arrête toutes les sessions (appelé à la désactivation du plugin) */
     public void stopAllSessions() {
         for (UUID uuid : sessions.keySet()) {
             Player p = plugin.getServer().getPlayer(uuid);
@@ -188,50 +176,60 @@ public class ParkourManager {
         sessions.clear();
     }
 
-    /** Vérifie si un joueur est tombé (Y trop bas par rapport au dernier bloc) */
+    /**
+     * Vérifie si le joueur est tombé.
+     * Si en duel, notifie le DuelManager (qui arrête le gagnant).
+     * Si solo, arrête la session directement.
+     */
     public void checkFall(Player player) {
         ParkourSession session = getSession(player);
         if (session == null) return;
 
-        Location lastBlock = session.getLastBlock();
-        if (lastBlock == null) return;
-
-        int playerY = player.getLocation().getBlockY();
         int lowestBlockY = session.getAllBlocks().stream()
                 .mapToInt(Location::getBlockY)
-                .min()
-                .orElse(lastBlock.getBlockY());
+                .min().orElse(player.getLocation().getBlockY());
 
-        if (playerY < lowestBlockY - 5) {
-            // Le joueur est tombé
+        if (player.getLocation().getBlockY() < lowestBlockY - 5) {
             int score = session.getScore();
+            boolean inDuel = plugin.getDuelManager().isInDuel(player);
+
             stopSession(player, false);
 
-            String msg = plugin.getConfig().getString("messages.prefix", "")
-                    + plugin.getConfig().getString("messages.fall", "&cTombé ! Score: &6{score}")
-                            .replace("{score}", String.valueOf(score));
-            FoliaUtil.runForEntity(plugin, player, () -> {
-                MessageUtil.send(player, msg);
-                MessageUtil.sendTitle(player, "&c✗", "&7Score: &6" + score, 5, 40, 10);
-            });
+            if (inDuel) {
+                plugin.getDuelManager().onDuelEnd(player, score);
+            } else {
+                String msg = plugin.getConfig().getString("messages.prefix", "")
+                        + plugin.getConfig().getString("messages.fall", "&cTombé ! Score: &6{score}")
+                                .replace("{score}", String.valueOf(score));
+                FoliaUtil.runForEntity(plugin, player, () -> {
+                    MessageUtil.send(player, msg);
+                    MessageUtil.sendTitle(player, "&c✗", "&7Score: &6" + score, 5, 40, 10);
+                });
+            }
+        }
+    }
+
+    /** Met à jour le thème du joueur en live */
+    public void setTheme(Player player, BlockTheme theme) {
+        PlayerData data = playerDataCache.get(player.getUniqueId());
+        if (data != null) data.setTheme(theme);
+
+        ParkourSession session = getSession(player);
+        if (session != null) session.setTheme(theme);
+
+        if (data != null) {
+            FoliaUtil.runAsync(plugin, () -> plugin.getDatabaseManager().savePlayer(data));
         }
     }
 
     private void placeNextBlock(ParkourSession session) {
         Location next = generator.generateNext(session);
         if (next == null) return;
-
-        Material mat = generator.getRandomMaterial(session.getDifficulty());
+        Material mat = generator.getRandomMaterial(session.getDifficulty(), session.getTheme());
         session.addBlock(next);
-
         FoliaUtil.runAtLocation(plugin, next, () -> next.getBlock().setType(mat));
     }
 
-    public Collection<ParkourSession> getAllSessions() {
-        return sessions.values();
-    }
-
-    public PlayerData getPlayerData(UUID uuid) {
-        return playerDataCache.get(uuid);
-    }
+    public Collection<ParkourSession> getAllSessions() { return sessions.values(); }
+    public PlayerData getPlayerData(UUID uuid) { return playerDataCache.get(uuid); }
 }

@@ -20,42 +20,39 @@ import java.util.List;
 public class ParkourMenu implements Listener {
 
     private final FirstParkour plugin;
-    private static final String MENU_TITLE_RAW = "firstparkour_menu";
+    static final String MENU_TITLE = "&8✦ &6FirstParkour &8✦";
 
     public ParkourMenu(FirstParkour plugin) {
         this.plugin = plugin;
     }
 
     public void open(Player player) {
-        String rawTitle = plugin.getConfig().getString("gui.title", "&8✦ &6FirstParkour &8✦");
+        String rawTitle = plugin.getConfig().getString("gui.title", MENU_TITLE);
         int rows = plugin.getConfig().getInt("gui.rows", 3);
         Inventory inv = Bukkit.createInventory(null, rows * 9, MessageUtil.color(rawTitle));
 
         PlayerData data = plugin.getParkourManager().getPlayerData(player.getUniqueId());
 
-        // Fond vide
         ItemStack filler = buildItem(Material.GRAY_STAINED_GLASS_PANE, " ", List.of());
         for (int i = 0; i < inv.getSize(); i++) inv.setItem(i, filler);
 
-        // Bouton Facile
-        int easySlot = plugin.getConfig().getInt("gui.easy-slot", 11);
-        inv.setItem(easySlot, buildDifficultyItem(Difficulty.EASY, data, Material.LIME_TERRACOTTA));
+        inv.setItem(plugin.getConfig().getInt("gui.easy-slot", 11),
+                buildDifficultyItem(Difficulty.EASY, data, Material.LIME_TERRACOTTA));
+        inv.setItem(plugin.getConfig().getInt("gui.medium-slot", 13),
+                buildDifficultyItem(Difficulty.MEDIUM, data, Material.YELLOW_TERRACOTTA));
+        inv.setItem(plugin.getConfig().getInt("gui.hard-slot", 15),
+                buildDifficultyItem(Difficulty.HARD, data, Material.RED_TERRACOTTA));
 
-        // Bouton Normal
-        int medSlot = plugin.getConfig().getInt("gui.medium-slot", 13);
-        inv.setItem(medSlot, buildDifficultyItem(Difficulty.MEDIUM, data, Material.YELLOW_TERRACOTTA));
+        // Bouton thèmes (slot 20)
+        inv.setItem(20, buildItem(Material.PAINTING, "&bThèmes de blocs",
+                List.of("", "&7Personnalisez l'apparence", "&7de vos blocs de parkour.", "", "&eCliquez pour ouvrir")));
 
-        // Bouton Difficile
-        int hardSlot = plugin.getConfig().getInt("gui.hard-slot", 15);
-        inv.setItem(hardSlot, buildDifficultyItem(Difficulty.HARD, data, Material.RED_TERRACOTTA));
+        // Bouton stats (slot 24)
+        inv.setItem(plugin.getConfig().getInt("gui.stats-slot", 24), buildStatsItem(data));
 
-        // Bouton Stats
-        int statsSlot = plugin.getConfig().getInt("gui.stats-slot", 24);
-        inv.setItem(statsSlot, buildStatsItem(data));
-
-        // Bouton Fermer
-        int closeSlot = plugin.getConfig().getInt("gui.close-slot", 26);
-        inv.setItem(closeSlot, buildItem(Material.BARRIER, "&cFermer", List.of()));
+        // Bouton fermer (slot 26)
+        inv.setItem(plugin.getConfig().getInt("gui.close-slot", 26),
+                buildItem(Material.BARRIER, "&cFermer", List.of()));
 
         player.openInventory(inv);
     }
@@ -64,31 +61,28 @@ public class ParkourMenu implements Listener {
         String nexoId = plugin.getConfig().getString("difficulties." + difficulty.getKey() + ".nexo-item", "");
         String diffName = plugin.getConfig().getString("difficulties." + difficulty.getKey() + ".display-name", difficulty.getKey());
 
-        // Essai avec Nexo si disponible
         ItemStack item = tryNexoItem(nexoId, fallbackMat);
-
         int best = data != null ? data.getBestScore(difficulty) : 0;
-        List<String> lore = List.of(
+        setMeta(item, MessageUtil.color(diffName), List.of(
                 "",
                 "&7Cliquez pour &6choisir cette difficulté",
                 "",
                 "&7Votre record: &e" + best + " blocs"
-        );
-        setMeta(item, MessageUtil.color(diffName), lore);
+        ));
         return item;
     }
 
     private ItemStack buildStatsItem(PlayerData data) {
-        ItemStack item = buildItem(Material.BOOK, "&6Vos Statistiques",
+        return buildItem(Material.BOOK, "&6Vos Statistiques",
                 data == null ? List.of("&7Chargement...") : List.of(
                         "",
                         "&7Facile:     &a" + data.getBestScoreEasy() + " blocs",
                         "&7Normal:     &e" + data.getBestScoreMedium() + " blocs",
                         "&7Difficile:  &c" + data.getBestScoreHard() + " blocs",
                         "",
-                        "&7Total sauts: &6" + data.getTotalJumps()
+                        "&7Total sauts: &6" + data.getTotalJumps(),
+                        "&7Thème: &b" + (data.getTheme() != null ? data.getTheme().getKey() : "défaut")
                 ));
-        return item;
     }
 
     private ItemStack tryNexoItem(String nexoId, Material fallback) {
@@ -123,26 +117,21 @@ public class ParkourMenu implements Listener {
         if (!(event.getWhoClicked() instanceof Player player)) return;
         if (event.getCurrentItem() == null) return;
 
-        String title = MessageUtil.color(plugin.getConfig().getString("gui.title", "&8✦ &6FirstParkour &8✦"));
+        String title = MessageUtil.color(plugin.getConfig().getString("gui.title", MENU_TITLE));
         if (!event.getView().getTitle().equals(title)) return;
 
         event.setCancelled(true);
-
         int slot = event.getSlot();
-        int easySlot = plugin.getConfig().getInt("gui.easy-slot", 11);
-        int medSlot = plugin.getConfig().getInt("gui.medium-slot", 13);
-        int hardSlot = plugin.getConfig().getInt("gui.hard-slot", 15);
-        int closeSlot = plugin.getConfig().getInt("gui.close-slot", 26);
-
         player.closeInventory();
 
-        if (slot == easySlot) {
-            plugin.getParkourManager().startSession(player, Difficulty.EASY);
-        } else if (slot == medSlot) {
-            plugin.getParkourManager().startSession(player, Difficulty.MEDIUM);
-        } else if (slot == hardSlot) {
-            plugin.getParkourManager().startSession(player, Difficulty.HARD);
-        }
-        // closeSlot = fermer seulement (déjà fait par closeInventory())
+        int easySlot   = plugin.getConfig().getInt("gui.easy-slot", 11);
+        int medSlot    = plugin.getConfig().getInt("gui.medium-slot", 13);
+        int hardSlot   = plugin.getConfig().getInt("gui.hard-slot", 15);
+        int themeSlot  = 20;
+
+        if      (slot == easySlot)  plugin.getParkourManager().startSession(player, Difficulty.EASY);
+        else if (slot == medSlot)   plugin.getParkourManager().startSession(player, Difficulty.MEDIUM);
+        else if (slot == hardSlot)  plugin.getParkourManager().startSession(player, Difficulty.HARD);
+        else if (slot == themeSlot) plugin.getThemeMenu().open(player);
     }
 }

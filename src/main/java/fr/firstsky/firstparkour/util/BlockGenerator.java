@@ -1,6 +1,7 @@
 package fr.firstsky.firstparkour.util;
 
 import fr.firstsky.firstparkour.FirstParkour;
+import fr.firstsky.firstparkour.model.BlockTheme;
 import fr.firstsky.firstparkour.model.Difficulty;
 import fr.firstsky.firstparkour.model.ParkourSession;
 import org.bukkit.Location;
@@ -20,21 +21,18 @@ public class BlockGenerator {
         this.plugin = plugin;
     }
 
-    /**
-     * Génère la prochaine location de bloc depuis la dernière position de la session.
-     * Retourne null si la session n'a aucun bloc de référence.
-     */
     public Location generateNext(ParkourSession session) {
         Location last = session.getLastBlock();
         if (last == null) return null;
 
-        ConfigurationSection diff = getDiffSection(session.getDifficulty());
+        ConfigurationSection diff = plugin.getConfig()
+                .getConfigurationSection("difficulties." + session.getDifficulty().getKey());
         if (diff == null) return null;
 
         int minDist = diff.getInt("min-distance", 2);
         int maxDist = diff.getInt("max-distance", 3);
-        int minH = diff.getInt("min-height", -1);
-        int maxH = diff.getInt("max-height", 1);
+        int minH    = diff.getInt("min-height", -1);
+        int maxH    = diff.getInt("max-height", 1);
         double spread = diff.getDouble("angle-spread", 30.0);
 
         int distance = minDist + random.nextInt(maxDist - minDist + 1);
@@ -45,8 +43,6 @@ public class BlockGenerator {
 
         int dx = (int) Math.round(Math.sin(newAngle) * distance);
         int dz = (int) Math.round(Math.cos(newAngle) * distance);
-
-        // Garantie de distance minimale sur l'axe horizontal
         if (Math.abs(dx) + Math.abs(dz) < 2) {
             if (dx == 0 && dz == 0) dz = distance;
         }
@@ -58,29 +54,42 @@ public class BlockGenerator {
         newY = Math.max(minWorld, Math.min(maxWorld, newY));
 
         return new Location(last.getWorld(),
-                last.getBlockX() + dx,
-                newY,
-                last.getBlockZ() + dz);
+                last.getBlockX() + dx, newY, last.getBlockZ() + dz);
     }
 
-    public Material getRandomMaterial(Difficulty difficulty) {
-        ConfigurationSection diff = getDiffSection(difficulty);
-        if (diff == null) return Material.STONE;
+    /**
+     * Récupère un matériau aléatoire selon le thème du joueur.
+     * Si le thème est DEFAULT, utilise les blocs de la difficulté.
+     */
+    public Material getRandomMaterial(Difficulty difficulty, BlockTheme theme) {
+        List<String> blockNames;
 
-        List<String> blockNames = diff.getStringList("blocks");
-        if (blockNames.isEmpty()) return Material.STONE;
-
-        List<Material> materials = new ArrayList<>();
-        for (String name : blockNames) {
-            try {
-                materials.add(Material.valueOf(name.toUpperCase()));
-            } catch (IllegalArgumentException ignored) {}
+        if (theme != null && theme != BlockTheme.DEFAULT) {
+            ConfigurationSection themeSec = plugin.getConfig()
+                    .getConfigurationSection("themes." + theme.getKey());
+            if (themeSec != null) {
+                blockNames = themeSec.getStringList("blocks");
+                if (!blockNames.isEmpty()) {
+                    return pickMaterial(blockNames);
+                }
+            }
         }
-        if (materials.isEmpty()) return Material.STONE;
-        return materials.get(random.nextInt(materials.size()));
+
+        // Fallback : blocs de la difficulté
+        ConfigurationSection diff = plugin.getConfig()
+                .getConfigurationSection("difficulties." + difficulty.getKey());
+        if (diff == null) return Material.STONE;
+        blockNames = diff.getStringList("blocks");
+        return pickMaterial(blockNames);
     }
 
-    private ConfigurationSection getDiffSection(Difficulty difficulty) {
-        return plugin.getConfig().getConfigurationSection("difficulties." + difficulty.getKey());
+    private Material pickMaterial(List<String> names) {
+        List<Material> mats = new ArrayList<>();
+        for (String name : names) {
+            try { mats.add(Material.valueOf(name.toUpperCase())); }
+            catch (IllegalArgumentException ignored) {}
+        }
+        if (mats.isEmpty()) return Material.STONE;
+        return mats.get(random.nextInt(mats.size()));
     }
 }

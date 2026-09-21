@@ -3,6 +3,7 @@ package fr.firstsky.firstparkour.database;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import fr.firstsky.firstparkour.FirstParkour;
+import fr.firstsky.firstparkour.model.BlockTheme;
 import fr.firstsky.firstparkour.model.Difficulty;
 import fr.firstsky.firstparkour.model.PlayerData;
 
@@ -38,6 +39,7 @@ public class DatabaseManager {
 
         dataSource = new HikariDataSource(cfg);
         createTables();
+        migrateIfNeeded();
     }
 
     private void createTables() {
@@ -50,6 +52,7 @@ public class DatabaseManager {
                     best_score_medium INT DEFAULT 0,
                     best_score_hard INT DEFAULT 0,
                     total_jumps BIGINT DEFAULT 0,
+                    theme VARCHAR(32) DEFAULT 'default',
                     last_played TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """);
@@ -58,7 +61,23 @@ public class DatabaseManager {
         }
     }
 
-    /** Charge les données du joueur (synchrone, à appeler en async) */
+    /** Ajoute la colonne theme si elle n'existe pas (migration depuis v1.0.0) */
+    private void migrateIfNeeded() {
+        try (Connection c = dataSource.getConnection()) {
+            DatabaseMetaData meta = c.getMetaData();
+            try (ResultSet rs = meta.getColumns(null, null, "firstparkour_players", "theme")) {
+                if (!rs.next()) {
+                    try (Statement s = c.createStatement()) {
+                        s.executeUpdate("ALTER TABLE firstparkour_players ADD COLUMN theme VARCHAR(32) DEFAULT 'default'");
+                        plugin.getLogger().info("Migration DB : colonne 'theme' ajoutée.");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.WARNING, "Erreur migration DB", e);
+        }
+    }
+
     public PlayerData loadPlayer(UUID uuid, String name) {
         try (Connection c = dataSource.getConnection();
              PreparedStatement ps = c.prepareStatement(
@@ -71,7 +90,8 @@ public class DatabaseManager {
                             rs.getInt("best_score_easy"),
                             rs.getInt("best_score_medium"),
                             rs.getInt("best_score_hard"),
-                            rs.getLong("total_jumps"));
+                            rs.getLong("total_jumps"),
+                            BlockTheme.fromKey(rs.getString("theme")));
                 }
             }
             try (PreparedStatement ins = c.prepareStatement(
@@ -83,20 +103,20 @@ public class DatabaseManager {
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Erreur chargement joueur " + uuid, e);
         }
-        return new PlayerData(uuid, name, 0, 0, 0, 0);
+        return new PlayerData(uuid, name, 0, 0, 0, 0, BlockTheme.DEFAULT);
     }
 
-    /** Sauvegarde les données du joueur (synchrone, à appeler en async) */
     public void savePlayer(PlayerData data) {
         String sql = """
-            INSERT INTO firstparkour_players (uuid, name, best_score_easy, best_score_medium, best_score_hard, total_jumps)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO firstparkour_players (uuid, name, best_score_easy, best_score_medium, best_score_hard, total_jumps, theme)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             ON DUPLICATE KEY UPDATE
                 name = VALUES(name),
                 best_score_easy   = GREATEST(best_score_easy,   VALUES(best_score_easy)),
                 best_score_medium = GREATEST(best_score_medium, VALUES(best_score_medium)),
                 best_score_hard   = GREATEST(best_score_hard,   VALUES(best_score_hard)),
                 total_jumps = total_jumps + VALUES(total_jumps),
+                theme = VALUES(theme),
                 last_played = CURRENT_TIMESTAMP
         """;
         try (Connection c = dataSource.getConnection();
@@ -107,19 +127,19 @@ public class DatabaseManager {
             ps.setInt(4, data.getBestScoreMedium());
             ps.setInt(5, data.getBestScoreHard());
             ps.setLong(6, data.getTotalJumps());
+            ps.setString(7, data.getTheme().getKey());
             ps.executeUpdate();
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Erreur sauvegarde joueur " + data.getUuid(), e);
         }
     }
 
-    /** Top N joueurs pour une difficulté (synchrone, à appeler en async) */
     public List<PlayerData> getLeaderboard(Difficulty difficulty, int limit) {
         String col = difficulty.getScoreColumn();
         List<PlayerData> list = new ArrayList<>();
-        String sql = "SELECT * FROM firstparkour_players ORDER BY " + col + " DESC LIMIT ?";
         try (Connection c = dataSource.getConnection();
-             PreparedStatement ps = c.prepareStatement(sql)) {
+             PreparedStatement ps = c.prepareStatement(
+                     "SELECT * FROM firstparkour_players ORDER BY " + col + " DESC LIMIT ?")) {
             ps.setInt(1, limit);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -129,7 +149,8 @@ public class DatabaseManager {
                             rs.getInt("best_score_easy"),
                             rs.getInt("best_score_medium"),
                             rs.getInt("best_score_hard"),
-                            rs.getLong("total_jumps")));
+                            rs.getLong("total_jumps"),
+                            BlockTheme.fromKey(rs.getString("theme"))));
                 }
             }
         } catch (SQLException e) {

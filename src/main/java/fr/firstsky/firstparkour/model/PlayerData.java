@@ -10,14 +10,16 @@ public class PlayerData {
     private int bestScoreMedium;
     private int bestScoreHard;
     private long totalJumps;
+    private BlockTheme theme;
 
-    public PlayerData(UUID uuid, String name, int bestEasy, int bestMedium, int bestHard, long totalJumps) {
+    public PlayerData(UUID uuid, String name, int bestEasy, int bestMedium, int bestHard, long totalJumps, BlockTheme theme) {
         this.uuid = uuid;
         this.name = name;
         this.bestScoreEasy = bestEasy;
         this.bestScoreMedium = bestMedium;
         this.bestScoreHard = bestHard;
         this.totalJumps = totalJumps;
+        this.theme = theme != null ? theme : BlockTheme.DEFAULT;
     }
 
     public int getBestScore(Difficulty difficulty) {
@@ -36,9 +38,7 @@ public class PlayerData {
         }
     }
 
-    public void addJumps(int n) {
-        totalJumps += n;
-    }
+    public void addJumps(int n) { totalJumps += n; }
 
     public UUID getUuid() { return uuid; }
     public String getName() { return name; }
@@ -47,4 +47,6 @@ public class PlayerData {
     public int getBestScoreMedium() { return bestScoreMedium; }
     public int getBestScoreHard() { return bestScoreHard; }
     public long getTotalJumps() { return totalJumps; }
+    public BlockTheme getTheme() { return theme; }
+    public void setTheme(BlockTheme theme) { this.theme = theme != null ? theme : BlockTheme.DEFAULT; }
 }

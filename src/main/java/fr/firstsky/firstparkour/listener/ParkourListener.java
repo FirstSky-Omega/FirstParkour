@@ -62,6 +62,7 @@ public class ParkourListener implements Listener {
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
+        plugin.getDuelManager().onPlayerQuit(event.getPlayer());
         plugin.getParkourManager().unloadPlayer(event.getPlayer());
         wasOnGround.remove(event.getPlayer().getUniqueId());
     }

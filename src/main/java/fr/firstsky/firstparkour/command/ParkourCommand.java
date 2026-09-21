@@ -11,6 +11,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ParkourCommand implements CommandExecutor, TabCompleter {
@@ -32,7 +33,6 @@ public class ParkourCommand implements CommandExecutor, TabCompleter {
 
         String prefix = plugin.getConfig().getString("messages.prefix", "");
 
-        // /parkour → ouvre le menu
         if (args.length == 0) {
             if (!player.hasPermission("firstparkour.use")) {
                 MessageUtil.send(player, prefix + plugin.getConfig().getString("messages.no-permission"));
@@ -44,73 +44,80 @@ public class ParkourCommand implements CommandExecutor, TabCompleter {
 
         switch (args[0].toLowerCase()) {
 
+            // ── Parkour solo ──────────────────────────────────
             case "stop" -> {
-                if (!player.hasPermission("firstparkour.use")) {
-                    MessageUtil.send(player, prefix + plugin.getConfig().getString("messages.no-permission"));
-                    return true;
-                }
+                if (!player.hasPermission("firstparkour.use")) { noPerms(player, prefix); return true; }
                 if (!plugin.getParkourManager().isPlaying(player)) {
-                    MessageUtil.send(player, prefix + plugin.getConfig().getString("messages.not-playing"));
-                    return true;
+                    MessageUtil.send(player, prefix + plugin.getConfig().getString("messages.not-playing")); return true;
                 }
-                plugin.getParkourManager().stopSession(player, true);
-            }
-
-            case "stats" -> {
-                if (!player.hasPermission("firstparkour.use")) {
-                    MessageUtil.send(player, prefix + plugin.getConfig().getString("messages.no-permission"));
-                    return true;
-                }
-                PlayerData data = plugin.getParkourManager().getPlayerData(player.getUniqueId());
-                if (data == null) {
-                    MessageUtil.send(player, prefix + "&7Données en cours de chargement...");
-                    return true;
-                }
-                MessageUtil.send(player, plugin.getConfig().getString("messages.stats-header"));
-                MessageUtil.send(player, plugin.getConfig().getString("messages.stats-easy")
-                        .replace("{score}", String.valueOf(data.getBestScoreEasy())));
-                MessageUtil.send(player, plugin.getConfig().getString("messages.stats-medium")
-                        .replace("{score}", String.valueOf(data.getBestScoreMedium())));
-                MessageUtil.send(player, plugin.getConfig().getString("messages.stats-hard")
-                        .replace("{score}", String.valueOf(data.getBestScoreHard())));
-                MessageUtil.send(player, plugin.getConfig().getString("messages.stats-jumps")
-                        .replace("{jumps}", String.valueOf(data.getTotalJumps())));
-            }
-
-            case "top" -> {
-                if (!player.hasPermission("firstparkour.use")) {
-                    MessageUtil.send(player, prefix + plugin.getConfig().getString("messages.no-permission"));
-                    return true;
-                }
-                Difficulty diff = Difficulty.EASY;
-                if (args.length >= 2) {
-                    Difficulty parsed = Difficulty.fromKey(args[1]);
-                    if (parsed != null) diff = parsed;
-                }
-                String diffName = plugin.getConfig().getString(
-                        "difficulties." + diff.getKey() + ".display-name", diff.getKey());
-                MessageUtil.send(player, plugin.getConfig().getString("messages.top-header")
-                        .replace("{difficulty}", MessageUtil.color(diffName)));
-
-                var top = plugin.getLeaderboardManager().getTop(diff);
-                if (top.isEmpty()) {
-                    MessageUtil.send(player, plugin.getConfig().getString("messages.top-empty"));
+                if (plugin.getDuelManager().isInDuel(player)) {
+                    int score = plugin.getParkourManager().getSession(player).getScore();
+                    plugin.getParkourManager().stopSession(player, false);
+                    plugin.getDuelManager().onDuelEnd(player, score);
                 } else {
-                    for (int i = 0; i < top.size(); i++) {
-                        var entry = top.get(i);
-                        MessageUtil.send(player, plugin.getConfig().getString("messages.top-line")
-                                .replace("{rank}", String.valueOf(i + 1))
-                                .replace("{name}", entry.getName())
-                                .replace("{score}", String.valueOf(entry.getBestScore(diff))));
+                    plugin.getParkourManager().stopSession(player, true);
+                }
+            }
+
+            // ── Stats ────────────────────────────────────────
+            case "stats" -> {
+                if (!player.hasPermission("firstparkour.use")) { noPerms(player, prefix); return true; }
+                PlayerData data = plugin.getParkourManager().getPlayerData(player.getUniqueId());
+                if (data == null) { MessageUtil.send(player, prefix + "&7Données en chargement..."); return true; }
+                MessageUtil.send(player, plugin.getConfig().getString("messages.stats-header"));
+                MessageUtil.send(player, plugin.getConfig().getString("messages.stats-easy").replace("{score}", String.valueOf(data.getBestScoreEasy())));
+                MessageUtil.send(player, plugin.getConfig().getString("messages.stats-medium").replace("{score}", String.valueOf(data.getBestScoreMedium())));
+                MessageUtil.send(player, plugin.getConfig().getString("messages.stats-hard").replace("{score}", String.valueOf(data.getBestScoreHard())));
+                MessageUtil.send(player, plugin.getConfig().getString("messages.stats-jumps").replace("{jumps}", String.valueOf(data.getTotalJumps())));
+                MessageUtil.send(player, prefix + "&7Thème actif: &b" + data.getTheme().getKey());
+            }
+
+            // ── Classement ────────────────────────────────────
+            case "top" -> {
+                if (!player.hasPermission("firstparkour.use")) { noPerms(player, prefix); return true; }
+                Difficulty diff = Difficulty.EASY;
+                if (args.length >= 2) { Difficulty parsed = Difficulty.fromKey(args[1]); if (parsed != null) diff = parsed; }
+                String diffName = plugin.getConfig().getString("difficulties." + diff.getKey() + ".display-name", diff.getKey());
+                MessageUtil.send(player, plugin.getConfig().getString("messages.top-header").replace("{difficulty}", MessageUtil.color(diffName)));
+                var top = plugin.getLeaderboardManager().getTop(diff);
+                if (top.isEmpty()) { MessageUtil.send(player, plugin.getConfig().getString("messages.top-empty")); }
+                else for (int i = 0; i < top.size(); i++) {
+                    var e = top.get(i);
+                    MessageUtil.send(player, plugin.getConfig().getString("messages.top-line")
+                            .replace("{rank}", String.valueOf(i + 1))
+                            .replace("{name}", e.getName())
+                            .replace("{score}", String.valueOf(e.getBestScore(diff))));
+                }
+            }
+
+            // ── Duel ─────────────────────────────────────────
+            case "duel" -> {
+                if (!player.hasPermission("firstparkour.use")) { noPerms(player, prefix); return true; }
+                if (args.length < 2) {
+                    MessageUtil.send(player, prefix + "&7Usage: &e/parkour duel <joueur> [easy|medium|hard]");
+                    MessageUtil.send(player, prefix + "&7       &e/parkour duel accept");
+                    MessageUtil.send(player, prefix + "&7       &e/parkour duel decline");
+                    return true;
+                }
+                switch (args[1].toLowerCase()) {
+                    case "accept"  -> plugin.getDuelManager().acceptInvite(player);
+                    case "decline", "refuser", "refus" -> plugin.getDuelManager().declineInvite(player);
+                    default -> {
+                        Player target = plugin.getServer().getPlayer(args[1]);
+                        if (target == null) {
+                            MessageUtil.send(player, prefix + "&cJoueur introuvable ou hors-ligne.");
+                            return true;
+                        }
+                        Difficulty diff = Difficulty.EASY;
+                        if (args.length >= 3) { Difficulty parsed = Difficulty.fromKey(args[2]); if (parsed != null) diff = parsed; }
+                        plugin.getDuelManager().sendInvite(player, target, diff);
                     }
                 }
             }
 
+            // ── Admin ─────────────────────────────────────────
             case "setspawn" -> {
-                if (!player.hasPermission("firstparkour.admin")) {
-                    MessageUtil.send(player, prefix + plugin.getConfig().getString("messages.no-permission"));
-                    return true;
-                }
+                if (!player.hasPermission("firstparkour.admin")) { noPerms(player, prefix); return true; }
                 var loc = player.getLocation();
                 plugin.getConfig().set("spawn.world", loc.getWorld().getName());
                 plugin.getConfig().set("spawn.x", loc.getX());
@@ -123,10 +130,7 @@ public class ParkourCommand implements CommandExecutor, TabCompleter {
             }
 
             case "reload" -> {
-                if (!player.hasPermission("firstparkour.admin")) {
-                    MessageUtil.send(player, prefix + plugin.getConfig().getString("messages.no-permission"));
-                    return true;
-                }
+                if (!player.hasPermission("firstparkour.admin")) { noPerms(player, prefix); return true; }
                 plugin.reloadConfig();
                 MessageUtil.send(player, prefix + plugin.getConfig().getString("messages.reload"));
             }
@@ -137,15 +141,23 @@ public class ParkourCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    private void noPerms(Player player, String prefix) {
+        MessageUtil.send(player, prefix + plugin.getConfig().getString("messages.no-permission", "&cPermission insuffisante."));
+    }
+
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command cmd,
                                      @NotNull String label, @NotNull String[] args) {
-        if (args.length == 1) {
-            return List.of("stop", "stats", "top", "setspawn", "reload");
+        if (args.length == 1) return List.of("stop", "stats", "top", "duel", "setspawn", "reload");
+        if (args.length == 2) {
+            if (args[0].equalsIgnoreCase("top")) return List.of("easy", "medium", "hard");
+            if (args[0].equalsIgnoreCase("duel")) {
+                List<String> names = new ArrayList<>(List.of("accept", "decline"));
+                plugin.getServer().getOnlinePlayers().forEach(p -> names.add(p.getName()));
+                return names;
+            }
         }
-        if (args.length == 2 && args[0].equalsIgnoreCase("top")) {
-            return List.of("easy", "medium", "hard");
-        }
+        if (args.length == 3 && args[0].equalsIgnoreCase("duel")) return List.of("easy", "medium", "hard");
         return List.of();
     }
 }

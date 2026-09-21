@@ -3,7 +3,9 @@ package fr.firstsky.firstparkour;
 import fr.firstsky.firstparkour.command.ParkourCommand;
 import fr.firstsky.firstparkour.database.DatabaseManager;
 import fr.firstsky.firstparkour.gui.ParkourMenu;
+import fr.firstsky.firstparkour.gui.ThemeMenu;
 import fr.firstsky.firstparkour.listener.ParkourListener;
+import fr.firstsky.firstparkour.manager.DuelManager;
 import fr.firstsky.firstparkour.manager.LeaderboardManager;
 import fr.firstsky.firstparkour.manager.ParkourManager;
 import fr.firstsky.firstparkour.placeholder.ParkourExpansion;
@@ -17,8 +19,10 @@ public class FirstParkour extends JavaPlugin {
 
     private DatabaseManager databaseManager;
     private ParkourManager parkourManager;
+    private DuelManager duelManager;
     private LeaderboardManager leaderboardManager;
     private ParkourMenu parkourMenu;
+    private ThemeMenu themeMenu;
 
     @Override
     public void onEnable() {
@@ -29,27 +33,29 @@ public class FirstParkour extends JavaPlugin {
         databaseManager.init();
 
         parkourManager = new ParkourManager(this);
+        duelManager = new DuelManager(this);
         leaderboardManager = new LeaderboardManager(this);
         leaderboardManager.startRefreshTask();
 
         parkourMenu = new ParkourMenu(this);
+        themeMenu = new ThemeMenu(this);
 
-        var pluginManager = getServer().getPluginManager();
-        pluginManager.registerEvents(new ParkourListener(this), this);
-        pluginManager.registerEvents(parkourMenu, this);
+        var pm = getServer().getPluginManager();
+        pm.registerEvents(new ParkourListener(this), this);
+        pm.registerEvents(parkourMenu, this);
+        pm.registerEvents(themeMenu, this);
 
         var cmd = Objects.requireNonNull(getCommand("parkour"));
         var executor = new ParkourCommand(this);
         cmd.setExecutor(executor);
         cmd.setTabCompleter(executor);
 
-        if (pluginManager.isPluginEnabled("PlaceholderAPI")) {
+        if (pm.isPluginEnabled("PlaceholderAPI")) {
             new ParkourExpansion(this).register();
             getLogger().info("PlaceholderAPI trouvé — expansion enregistrée.");
         }
-
-        if (pluginManager.isPluginEnabled("Nexo")) {
-            getLogger().info("Nexo trouvé — items custom activés dans le menu.");
+        if (pm.isPluginEnabled("Nexo")) {
+            getLogger().info("Nexo trouvé — items custom activés.");
         }
 
         getLogger().info("FirstParkour activé !");
@@ -66,6 +72,8 @@ public class FirstParkour extends JavaPlugin {
 
     public DatabaseManager getDatabaseManager() { return databaseManager; }
     public ParkourManager getParkourManager() { return parkourManager; }
+    public DuelManager getDuelManager() { return duelManager; }
     public LeaderboardManager getLeaderboardManager() { return leaderboardManager; }
     public ParkourMenu getParkourMenu() { return parkourMenu; }
+    public ThemeMenu getThemeMenu() { return themeMenu; }
 }

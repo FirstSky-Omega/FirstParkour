@@ -20,6 +20,7 @@ public class ParkourSession {
     private final long startTime;
     private boolean active;
     private final int historySize;
+    private BlockTheme theme = BlockTheme.DEFAULT;
 
     public ParkourSession(UUID playerUuid, Difficulty difficulty, int personalBest, int historySize) {
         this.playerUuid = playerUuid;
@@ -90,4 +91,6 @@ public class ParkourSession {
     public long getStartTime() { return startTime; }
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
+    public BlockTheme getTheme() { return theme; }
+    public void setTheme(BlockTheme theme) { this.theme = theme != null ? theme : BlockTheme.DEFAULT; }
 }

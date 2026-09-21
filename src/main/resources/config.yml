@@ -101,6 +101,35 @@ messages:
   stats-hard: '  &7Difficile: &c{score}'
   stats-jumps: '  &7Total sauts: &6{jumps}'
 
+themes:
+  nether:
+    display-name: '&cNether'
+    blocks: [NETHERRACK, BLACKSTONE, CRIMSON_PLANKS, NETHER_BRICKS, BASALT]
+
+  end:
+    display-name: '&5The End'
+    blocks: [END_STONE, PURPUR_BLOCK, OBSIDIAN, END_STONE_BRICKS, CRYING_OBSIDIAN]
+
+  ocean:
+    display-name: '&9Océan'
+    blocks: [PRISMARINE, PRISMARINE_BRICKS, DARK_PRISMARINE, SEA_LANTERN, BLUE_TERRACOTTA]
+
+  winter:
+    display-name: '&bHiver'
+    blocks: [PACKED_ICE, SNOW_BLOCK, ICE, BLUE_ICE, WHITE_CONCRETE]
+
+  desert:
+    display-name: '&eDésert'
+    blocks: [SANDSTONE, SMOOTH_SANDSTONE, CUT_SANDSTONE, TERRACOTTA, ORANGE_TERRACOTTA]
+
+  sky:
+    display-name: '&fNuages'
+    blocks: [WHITE_WOOL, LIGHT_BLUE_WOOL, WHITE_CONCRETE, GLASS, QUARTZ_BLOCK]
+
+  jungle:
+    display-name: '&aJungle'
+    blocks: [JUNGLE_LOG, JUNGLE_PLANKS, MOSSY_COBBLESTONE, OAK_LEAVES, VINE]
+
 gui:
   title: '&8✦ &6FirstParkour &8✦'
   rows: 3
