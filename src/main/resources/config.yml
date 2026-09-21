@@ -84,7 +84,7 @@ difficulties:
       - SOUL_SAND
 
 messages:
-  prefix: '&8[&6FirstParkour&8] '
+  prefix: '&#07B9FB&lF&#08ADFC&li&#09A2FC&lr&#0A96FD&ls&#0C8BFD&lt&#0D7FFE&lS&#0E74FE&lk&#0F68FF&ly &f&l» '
   start: '&aParkour &6{difficulty} &adémarré ! Bonne chance !'
   stop: '&cParkour arrêté. Score final: &6{score} &cblocs.'
   new-record: '&6✦ NOUVEAU RECORD ! &e{score} &6blocs !'
