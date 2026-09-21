@@ -4,6 +4,7 @@ import fr.firstsky.firstparkour.FirstParkour;
 import fr.firstsky.firstparkour.model.DailyEntry;
 import fr.firstsky.firstparkour.model.Difficulty;
 import fr.firstsky.firstparkour.util.FoliaUtil;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -19,6 +20,7 @@ public class DailyChallengeManager {
     private volatile List<DailyEntry> dailyTop = new ArrayList<>();
     private volatile LocalDate currentDate = LocalDate.now();
     private volatile Difficulty todayDifficulty;
+    private ScheduledTask resetTask;
 
     public DailyChallengeManager(FirstParkour plugin) {
         this.plugin = plugin;
@@ -40,14 +42,19 @@ public class DailyChallengeManager {
     }
 
     private void scheduleNextReset() {
+        if (resetTask != null) resetTask.cancel();
         LocalDateTime midnight = LocalDate.now().plusDays(1).atStartOfDay();
         long delayMs = Duration.between(LocalDateTime.now(), midnight).toMillis();
-        FoliaUtil.runAsyncDelayed(plugin, () -> {
+        resetTask = FoliaUtil.runAsyncDelayedCancellable(plugin, () -> {
             currentDate = LocalDate.now();
             todayDifficulty = computeTodayDifficulty();
             refresh();
             scheduleNextReset();
         }, Math.max(delayMs, 1000));
+    }
+
+    public void stop() {
+        if (resetTask != null) resetTask.cancel();
     }
 
     private Difficulty computeTodayDifficulty() {
@@ -60,13 +67,11 @@ public class DailyChallengeManager {
         return d != null ? d : Difficulty.EASY;
     }
 
-    /** Enregistre le score du jour si meilleur. */
+    /** Enregistre le score du jour si meilleur. Le refresh périodique (60 s) se charge de la mise à jour du cache. */
     public void recordIfBetter(UUID uuid, String name, int score, Difficulty difficulty) {
         if (!difficulty.equals(todayDifficulty)) return;
-        FoliaUtil.runAsync(plugin, () -> {
-            plugin.getDatabaseManager().saveDailyScore(uuid, name, score, currentDate, difficulty);
-            refresh();
-        });
+        FoliaUtil.runAsync(plugin, () ->
+                plugin.getDatabaseManager().saveDailyScore(uuid, name, score, currentDate, difficulty));
     }
 
     public Difficulty getTodayDifficulty()   { return todayDifficulty; }

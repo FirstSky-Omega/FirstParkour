@@ -196,6 +196,9 @@ public class ParkourCommand implements CommandExecutor, TabCompleter {
             case "recharger", "reload" -> {
                 if (!player.hasPermission("firstparkour.admin")) { noPerms(player, prefix); return true; }
                 plugin.reloadConfig();
+                plugin.getSoundManager().reload();
+                plugin.getParkourMenu().reloadCache();
+                // BlockGenerator expose reload via ParkourManager
                 MessageUtil.send(player, prefix + plugin.getConfig().getString("messages.reload"));
             }
 

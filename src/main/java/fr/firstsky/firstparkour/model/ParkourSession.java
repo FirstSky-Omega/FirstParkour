@@ -5,7 +5,9 @@ import org.bukkit.Location;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public class ParkourSession {
@@ -15,6 +17,11 @@ public class ParkourSession {
     private int score;
     private int personalBest;
     private final Deque<Location> activeBlocks = new ArrayDeque<>();
+    /** Index O(1) pour isParkourBlock — clé = "x,y,z" */
+    private final Set<String> blockKeys = new HashSet<>();
+    /** Y minimum des blocs actifs — mis à jour dans addBlock / pollOldestIfNeeded */
+    private int minBlockY = Integer.MAX_VALUE;
+
     private Location lastLandedBlock;
     private double currentAngle;
     private final long startTime;
@@ -34,28 +41,30 @@ public class ParkourSession {
     }
 
     public void addBlock(Location loc) {
-        activeBlocks.addLast(loc.clone());
+        Location c = loc.clone();
+        activeBlocks.addLast(c);
+        blockKeys.add(blockKey(c));
+        if (c.getBlockY() < minBlockY) minBlockY = c.getBlockY();
     }
 
     /** Retourne le bloc à supprimer si l'historique est trop long, sinon null */
     public Location pollOldestIfNeeded() {
         if (activeBlocks.size() > historySize) {
-            return activeBlocks.pollFirst();
+            Location removed = activeBlocks.pollFirst();
+            blockKeys.remove(blockKey(removed));
+            if (removed.getBlockY() == minBlockY) {
+                minBlockY = activeBlocks.stream()
+                        .mapToInt(Location::getBlockY)
+                        .min().orElse(Integer.MAX_VALUE);
+            }
+            return removed;
         }
         return null;
     }
 
+    /** O(1) grâce au HashSet. */
     public boolean isParkourBlock(Location loc) {
-        for (Location b : activeBlocks) {
-            if (b.getBlockX() == loc.getBlockX()
-                    && b.getBlockY() == loc.getBlockY()
-                    && b.getBlockZ() == loc.getBlockZ()
-                    && b.getWorld() != null
-                    && b.getWorld().equals(loc.getWorld())) {
-                return true;
-            }
-        }
-        return false;
+        return blockKeys.contains(blockKey(loc));
     }
 
     public boolean isLastLandedBlock(Location loc) {
@@ -87,6 +96,10 @@ public class ParkourSession {
         if (score > personalBest) personalBest = score;
     }
 
+    private static String blockKey(Location loc) {
+        return loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ();
+    }
+
     public UUID getPlayerUuid() { return playerUuid; }
     public Difficulty getDifficulty() { return difficulty; }
     public int getScore() { return score; }
@@ -98,4 +111,6 @@ public class ParkourSession {
     public void setActive(boolean active) { this.active = active; }
     public BlockTheme getTheme() { return theme; }
     public void setTheme(BlockTheme theme) { this.theme = theme != null ? theme : BlockTheme.DEFAULT; }
+    /** Y minimum des blocs actifs (sans copie de collection). */
+    public int getMinBlockY() { return minBlockY; }
 }

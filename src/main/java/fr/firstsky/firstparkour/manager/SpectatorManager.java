@@ -27,7 +27,9 @@ public class SpectatorManager {
     }
 
     public void start() {
-        FoliaUtil.runAsyncRepeating(plugin, this::tickActionBars, 0, 1_000);
+        // Global region scheduler : accès à l'API Bukkit thread-safe, toutes les 20 ticks (1 s)
+        plugin.getServer().getGlobalRegionScheduler()
+                .runAtFixedRate(plugin, t -> tickActionBars(), 20L, 20L);
     }
 
     // ──────────────────────────────────────────────
@@ -117,7 +119,8 @@ public class SpectatorManager {
     // ──────────────────────────────────────────────
 
     private void tickActionBars() {
-        for (UUID specUuid : new ArrayList<>(spectators.keySet())) {
+        // Appelé depuis global region scheduler — Bukkit API thread-safe ici
+        for (UUID specUuid : spectators.keySet()) {
             Player spectator = plugin.getServer().getPlayer(specUuid);
             if (spectator == null || !spectator.isOnline()) {
                 spectators.remove(specUuid);

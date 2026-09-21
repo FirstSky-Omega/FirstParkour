@@ -32,10 +32,14 @@ public class RewardManager {
         }
 
         List<String> commands = milestones.getStringList(key + ".commands");
-        for (String cmd : commands) {
-            String finalCmd = cmd.replace("{player}", player.getName());
-            FoliaUtil.runGlobal(plugin, () ->
-                    plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(), finalCmd));
+        if (!commands.isEmpty()) {
+            String playerName = player.getName();
+            FoliaUtil.runGlobal(plugin, () -> {
+                for (String cmd : commands) {
+                    plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(),
+                            cmd.replace("{player}", playerName));
+                }
+            });
         }
 
         plugin.getSoundManager().playMilestone(player);

@@ -14,7 +14,10 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -77,8 +80,13 @@ public class ParkourManager {
             return;
         }
 
-        PlayerData data = playerDataCache.computeIfAbsent(player.getUniqueId(),
-                id -> plugin.getDatabaseManager().loadPlayer(id, player.getName()));
+        // Ne jamais appeler loadPlayer sur le thread principal — si le cache n'est pas prêt, on attend
+        PlayerData data = playerDataCache.get(player.getUniqueId());
+        if (data == null) {
+            MessageUtil.send(player, plugin.getConfig().getString("messages.prefix", "")
+                    + "&7Données en chargement, réessayez dans un instant.");
+            return;
+        }
 
         // Sauvegarde gamemode avant de changer
         if (plugin.getConfig().getBoolean("parkour.force-adventure", true)) {
@@ -187,9 +195,17 @@ public class ParkourManager {
         if (session == null) return;
         session.setActive(false);
 
-        // Supprime les blocs
+        // Supprime les blocs — groupés par chunk pour minimiser les appels au region-scheduler
+        Map<Long, List<Location>> byChunk = new HashMap<>();
         for (Location loc : session.getAllBlocks()) {
-            FoliaUtil.runAtLocation(plugin, loc, () -> loc.getBlock().setType(Material.AIR));
+            long key = ((long) (loc.getBlockX() >> 4) << 32) | ((loc.getBlockZ() >> 4) & 0xFFFFFFFFL);
+            byChunk.computeIfAbsent(key, k -> new ArrayList<>()).add(loc);
+        }
+        for (List<Location> chunkBlocks : byChunk.values()) {
+            Location anchor = chunkBlocks.get(0);
+            FoliaUtil.runAtLocation(plugin, anchor, () -> {
+                for (Location bloc : chunkBlocks) bloc.getBlock().setType(Material.AIR);
+            });
         }
 
         // Restaure le gamemode
@@ -212,8 +228,6 @@ public class ParkourManager {
             FoliaUtil.runAsync(plugin, () -> plugin.getDatabaseManager().savePlayer(data));
         }
 
-        plugin.getLeaderboardManager().forceRefresh();
-
         if (sendMessage) {
             String msg = plugin.getConfig().getString("messages.prefix", "")
                     + plugin.getConfig().getString("messages.stop", "&cArrêté. Score: &6{score}")
@@ -223,7 +237,7 @@ public class ParkourManager {
     }
 
     public void stopAllSessions() {
-        for (UUID uuid : sessions.keySet()) {
+        for (UUID uuid : new ArrayList<>(sessions.keySet())) {
             Player p = plugin.getServer().getPlayer(uuid);
             if (p != null) stopSession(p, false);
         }
@@ -238,9 +252,8 @@ public class ParkourManager {
         ParkourSession session = getSession(player);
         if (session == null) return;
 
-        int lowestBlockY = session.getAllBlocks().stream()
-                .mapToInt(Location::getBlockY)
-                .min().orElse(player.getLocation().getBlockY());
+        // getMinBlockY() = O(1), pas de copie de collection
+        int lowestBlockY = session.getMinBlockY();
 
         if (player.getLocation().getBlockY() < lowestBlockY - 5) {
             int score = session.getScore();
@@ -342,16 +355,26 @@ public class ParkourManager {
         }
     }
 
-    /** Restaure la session après reconnexion en duel. */
+    /** Restaure la session après reconnexion en duel (sans appel DB sur le thread principal). */
     public void restoreSessionForDuel(Player player, Difficulty difficulty, int savedScore) {
-        PlayerData data = playerDataCache.computeIfAbsent(player.getUniqueId(),
-                id -> plugin.getDatabaseManager().loadPlayer(id, player.getName()));
+        PlayerData cached = playerDataCache.get(player.getUniqueId());
+        if (cached != null) {
+            doRestore(player, difficulty, cached, savedScore);
+        } else {
+            FoliaUtil.runAsync(plugin, () -> {
+                PlayerData loaded = plugin.getDatabaseManager().loadPlayer(
+                        player.getUniqueId(), player.getName());
+                playerDataCache.put(player.getUniqueId(), loaded);
+                doRestore(player, difficulty, loaded, savedScore);
+            });
+        }
+    }
 
+    private void doRestore(Player player, Difficulty difficulty, PlayerData data, int savedScore) {
         if (plugin.getConfig().getBoolean("parkour.force-adventure", true)) {
             previousGameModes.put(player.getUniqueId(), player.getGameMode());
             FoliaUtil.runForEntity(plugin, player, () -> player.setGameMode(GameMode.ADVENTURE));
         }
-
         Location parkourSpawn = getParkourSpawn(player);
         if (parkourSpawn != null) {
             savedLocations.put(player.getUniqueId(), player.getLocation().clone());

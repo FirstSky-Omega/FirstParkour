@@ -25,14 +25,30 @@ public class ParkourMenu implements Listener {
     static final String MENU_TITLE_KEY = "gui.title";
     static final String DEFAULT_TITLE  = "&8✦ &6FirstParkour &8✦";
 
+    private String cachedTitle;
+    private int slotEasy, slotMedium, slotHard, slotThemes, slotStats, slotClose, slotGlobal, slotDaily;
+
     public ParkourMenu(FirstParkour plugin) {
         this.plugin = plugin;
+        reloadCache();
+    }
+
+    /** Appelé à l'init et sur /parkour recharger. */
+    public void reloadCache() {
+        cachedTitle = MessageUtil.color(plugin.getConfig().getString(MENU_TITLE_KEY, DEFAULT_TITLE));
+        slotEasy    = plugin.getConfig().getInt("gui.easy-slot",    11);
+        slotMedium  = plugin.getConfig().getInt("gui.medium-slot",  13);
+        slotHard    = plugin.getConfig().getInt("gui.hard-slot",    15);
+        slotThemes  = plugin.getConfig().getInt("gui.themes-slot",  20);
+        slotStats   = plugin.getConfig().getInt("gui.stats-slot",   24);
+        slotClose   = plugin.getConfig().getInt("gui.close-slot",   26);
+        slotGlobal  = plugin.getConfig().getInt("gui.global-slot",  22);
+        slotDaily   = plugin.getConfig().getInt("gui.daily-slot",    4);
     }
 
     public void open(Player player) {
-        String rawTitle = menuTitle();
         int rows = plugin.getConfig().getInt("gui.rows", 3);
-        Inventory inv = Bukkit.createInventory(null, rows * 9, MessageUtil.color(rawTitle));
+        Inventory inv = Bukkit.createInventory(null, rows * 9, cachedTitle);
 
         PlayerData data = plugin.getParkourManager().getPlayerData(player.getUniqueId());
 
@@ -42,16 +58,16 @@ public class ParkourMenu implements Listener {
         for (int i = 0; i < inv.getSize(); i++) inv.setItem(i, filler);
 
         // ── Difficultés ───────────────────────────────────────────────────────
-        inv.setItem(slot("easy-slot", 11), diffItem(Difficulty.EASY, data));
-        inv.setItem(slot("medium-slot", 13), diffItem(Difficulty.MEDIUM, data));
-        inv.setItem(slot("hard-slot", 15), diffItem(Difficulty.HARD, data));
+        inv.setItem(slotEasy,   diffItem(Difficulty.EASY, data));
+        inv.setItem(slotMedium, diffItem(Difficulty.MEDIUM, data));
+        inv.setItem(slotHard,   diffItem(Difficulty.HARD, data));
 
         // ── Thèmes ────────────────────────────────────────────────────────────
         String themeNexo = nid("themes");
         ItemStack themeBtn = NexoUtil.build(themeNexo, Material.PAINTING,
                 "&bThèmes de blocs",
                 List.of("", "&7Personnalisez l'apparence", "&7de vos blocs de parkour.", "", "&eCliquez pour ouvrir"));
-        inv.setItem(slot("themes-slot", 20), themeBtn);
+        inv.setItem(slotThemes, themeBtn);
 
         // ── Stats ────────────────────────────────────────────────────────────
         List<String> statsLore;
@@ -68,7 +84,7 @@ public class ParkourMenu implements Listener {
                     "&7Thème actif: &b" + data.getTheme().getKey()
             );
         }
-        inv.setItem(slot("stats-slot", 24),
+        inv.setItem(slotStats,
                 NexoUtil.build(nid("stats"), Material.BOOK, "&6Vos Statistiques", statsLore));
 
         // ── Classement global ─────────────────────────────────────────────────
@@ -86,7 +102,7 @@ public class ParkourMenu implements Listener {
         }
         globalLore.add("");
         globalLore.add("&eCliquez pour le classement complet");
-        inv.setItem(slot("global-slot", 22),
+        inv.setItem(slotGlobal,
                 NexoUtil.build(nid("global"), Material.NETHER_STAR, "&6Classement Global", globalLore));
 
         // ── Défi quotidien ────────────────────────────────────────────────────
@@ -104,11 +120,11 @@ public class ParkourMenu implements Listener {
                 : "&7Vous n'avez pas encore participé.");
         dailyLore.add("");
         dailyLore.add("&eCliquez pour voir le classement");
-        inv.setItem(slot("daily-slot", 4),
+        inv.setItem(slotDaily,
                 NexoUtil.build(nid("daily"), Material.CLOCK, "&6Défi du Jour", dailyLore));
 
         // ── Fermer ────────────────────────────────────────────────────────────
-        inv.setItem(slot("close-slot", 26),
+        inv.setItem(slotClose,
                 NexoUtil.build(nid("close"), Material.BARRIER, "&cFermer", List.of()));
 
         player.openInventory(inv);
@@ -132,17 +148,17 @@ public class ParkourMenu implements Listener {
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
         if (event.getCurrentItem() == null) return;
-        if (!event.getView().getTitle().equals(MessageUtil.color(menuTitle()))) return;
+        if (!event.getView().getTitle().equals(cachedTitle)) return;
 
         event.setCancelled(true);
         int slot = event.getSlot();
         player.closeInventory();
 
-        if      (slot == slot("easy-slot", 11))   plugin.getParkourManager().startSession(player, Difficulty.EASY);
-        else if (slot == slot("medium-slot", 13)) plugin.getParkourManager().startSession(player, Difficulty.MEDIUM);
-        else if (slot == slot("hard-slot", 15))   plugin.getParkourManager().startSession(player, Difficulty.HARD);
-        else if (slot == slot("themes-slot", 20)) plugin.getThemeMenu().open(player);
-        else if (slot == slot("global-slot", 22)) {
+        if      (slot == slotEasy)   plugin.getParkourManager().startSession(player, Difficulty.EASY);
+        else if (slot == slotMedium) plugin.getParkourManager().startSession(player, Difficulty.MEDIUM);
+        else if (slot == slotHard)   plugin.getParkourManager().startSession(player, Difficulty.HARD);
+        else if (slot == slotThemes) plugin.getThemeMenu().open(player);
+        else if (slot == slotGlobal) {
             // Affiche le classement global en chat
             String prefix = plugin.getConfig().getString("messages.prefix", "");
             MessageUtil.send(player, prefix + "&8&m----&r &6Classement Global &8&m----");
@@ -157,23 +173,15 @@ public class ParkourMenu implements Listener {
                         .replace("{score}", String.valueOf(best)));
             }
         }
-        else if (slot == slot("daily-slot", 4)) {
+        else if (slot == slotDaily) {
             player.performCommand("parkour defi");
         }
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    private String menuTitle() {
-        return plugin.getConfig().getString(MENU_TITLE_KEY, DEFAULT_TITLE);
-    }
-
     /** Retourne l'id Nexo configuré pour un bouton du menu principal. */
     private String nid(String button) {
         return plugin.getConfig().getString("gui.nexo-items." + button, "");
-    }
-
-    private int slot(String key, int def) {
-        return plugin.getConfig().getInt("gui." + key, def);
     }
 }

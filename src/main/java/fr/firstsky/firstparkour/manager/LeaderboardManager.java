@@ -7,19 +7,18 @@ import fr.firstsky.firstparkour.util.FoliaUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class LeaderboardManager {
 
     private final FirstParkour plugin;
-    private final Map<Difficulty, List<PlayerData>> cache = new EnumMap<>(Difficulty.class);
+    private final Map<Difficulty, List<PlayerData>> cache = new ConcurrentHashMap<>();
     private volatile List<PlayerData> globalCache = new ArrayList<>();
 
     public LeaderboardManager(FirstParkour plugin) {
         this.plugin = plugin;
-        for (Difficulty d : Difficulty.values()) cache.put(d, new ArrayList<>());
     }
 
     public void startRefreshTask() {

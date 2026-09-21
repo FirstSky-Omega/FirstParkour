@@ -79,6 +79,7 @@ public class FirstParkour extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        if (dailyChallengeManager != null) dailyChallengeManager.stop();
         if (parkourManager != null) parkourManager.stopAllSessions();
         if (databaseManager != null) databaseManager.close();
         getLogger().info("FirstParkour désactivé.");

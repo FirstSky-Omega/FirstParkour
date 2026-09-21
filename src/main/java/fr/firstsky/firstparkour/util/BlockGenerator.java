@@ -9,35 +9,67 @@ import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 public class BlockGenerator {
 
+    private record DifficultyConfig(int minDist, int maxDist, int minH, int maxH, double spread) {}
+
     private final FirstParkour plugin;
     private final Random random = new Random();
 
+    /** Config de génération pré-calculée par difficulté */
+    private final Map<Difficulty, DifficultyConfig> diffConfigs = new EnumMap<>(Difficulty.class);
+    /** Matériaux pré-parsés par difficulté */
+    private final Map<Difficulty, Material[]> diffMaterials = new EnumMap<>(Difficulty.class);
+    /** Matériaux pré-parsés par thème */
+    private final Map<BlockTheme, Material[]> themeMaterials = new EnumMap<>(BlockTheme.class);
+
     public BlockGenerator(FirstParkour plugin) {
         this.plugin = plugin;
+        reload();
+    }
+
+    /** Appelé à l'initialisation et sur /parkour recharger. */
+    public void reload() {
+        diffConfigs.clear();
+        diffMaterials.clear();
+        themeMaterials.clear();
+
+        for (Difficulty d : Difficulty.values()) {
+            ConfigurationSection sec = plugin.getConfig()
+                    .getConfigurationSection("difficulties." + d.getKey());
+            if (sec == null) continue;
+            diffConfigs.put(d, new DifficultyConfig(
+                    sec.getInt("min-distance", 2), sec.getInt("max-distance", 3),
+                    sec.getInt("min-height", -1),  sec.getInt("max-height", 1),
+                    sec.getDouble("angle-spread", 30.0)));
+            diffMaterials.put(d, parseMaterials(sec.getStringList("blocks")));
+        }
+
+        for (BlockTheme t : BlockTheme.values()) {
+            if (t == BlockTheme.DEFAULT) continue;
+            ConfigurationSection sec = plugin.getConfig()
+                    .getConfigurationSection("themes." + t.getKey());
+            if (sec == null) continue;
+            Material[] mats = parseMaterials(sec.getStringList("blocks"));
+            if (mats.length > 0) themeMaterials.put(t, mats);
+        }
     }
 
     public Location generateNext(ParkourSession session) {
         Location last = session.getLastBlock();
         if (last == null) return null;
 
-        ConfigurationSection diff = plugin.getConfig()
-                .getConfigurationSection("difficulties." + session.getDifficulty().getKey());
-        if (diff == null) return null;
+        DifficultyConfig cfg = diffConfigs.get(session.getDifficulty());
+        if (cfg == null) return null;
 
-        int minDist = diff.getInt("min-distance", 2);
-        int maxDist = diff.getInt("max-distance", 3);
-        int minH    = diff.getInt("min-height", -1);
-        int maxH    = diff.getInt("max-height", 1);
-        double spread = diff.getDouble("angle-spread", 30.0);
+        int distance = cfg.minDist() + random.nextInt(cfg.maxDist() - cfg.minDist() + 1);
 
-        int distance = minDist + random.nextInt(maxDist - minDist + 1);
-
-        double deviation = (random.nextDouble() * 2.0 - 1.0) * Math.toRadians(spread);
+        double deviation = (random.nextDouble() * 2.0 - 1.0) * Math.toRadians(cfg.spread());
         double newAngle = session.getCurrentAngle() + deviation;
         session.setCurrentAngle(newAngle);
 
@@ -47,7 +79,7 @@ public class BlockGenerator {
             if (dx == 0 && dz == 0) dz = distance;
         }
 
-        int dy = minH + random.nextInt(maxH - minH + 1);
+        int dy = cfg.minH() + random.nextInt(cfg.maxH() - cfg.minH() + 1);
         int newY = last.getBlockY() + dy;
         int minWorld = last.getWorld().getMinHeight() + 5;
         int maxWorld = last.getWorld().getMaxHeight() - 5;
@@ -57,39 +89,22 @@ public class BlockGenerator {
                 last.getBlockX() + dx, newY, last.getBlockZ() + dz);
     }
 
-    /**
-     * Récupère un matériau aléatoire selon le thème du joueur.
-     * Si le thème est DEFAULT, utilise les blocs de la difficulté.
-     */
     public Material getRandomMaterial(Difficulty difficulty, BlockTheme theme) {
-        List<String> blockNames;
-
         if (theme != null && theme != BlockTheme.DEFAULT) {
-            ConfigurationSection themeSec = plugin.getConfig()
-                    .getConfigurationSection("themes." + theme.getKey());
-            if (themeSec != null) {
-                blockNames = themeSec.getStringList("blocks");
-                if (!blockNames.isEmpty()) {
-                    return pickMaterial(blockNames);
-                }
-            }
+            Material[] mats = themeMaterials.get(theme);
+            if (mats != null && mats.length > 0) return mats[random.nextInt(mats.length)];
         }
-
-        // Fallback : blocs de la difficulté
-        ConfigurationSection diff = plugin.getConfig()
-                .getConfigurationSection("difficulties." + difficulty.getKey());
-        if (diff == null) return Material.STONE;
-        blockNames = diff.getStringList("blocks");
-        return pickMaterial(blockNames);
+        Material[] mats = diffMaterials.get(difficulty);
+        if (mats == null || mats.length == 0) return Material.STONE;
+        return mats[random.nextInt(mats.length)];
     }
 
-    private Material pickMaterial(List<String> names) {
+    private static Material[] parseMaterials(List<String> names) {
         List<Material> mats = new ArrayList<>();
         for (String name : names) {
             try { mats.add(Material.valueOf(name.toUpperCase())); }
             catch (IllegalArgumentException ignored) {}
         }
-        if (mats.isEmpty()) return Material.STONE;
-        return mats.get(random.nextInt(mats.size()));
+        return mats.toArray(new Material[0]);
     }
 }
