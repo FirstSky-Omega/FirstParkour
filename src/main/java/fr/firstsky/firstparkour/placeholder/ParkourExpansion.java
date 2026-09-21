@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
  * %firstparkour_best_hard%                  → record personnel difficile
  * %firstparkour_record%                     → meilleur record toutes difficultés confondues
  *
+ * %firstparkour_rank%                        → meilleur classement toutes difficultés (— si hors top)
  * %firstparkour_rank_easy%                  → classement du joueur en facile (— si hors top)
  * %firstparkour_rank_medium%                → classement du joueur en normal
  * %firstparkour_rank_hard%                  → classement du joueur en difficile
@@ -98,7 +99,17 @@ public class ParkourExpansion extends PlaceholderExpansion {
             return String.valueOf(best);
         }
 
-        // Classement du joueur : rank_easy / rank_medium / rank_hard
+        // Meilleur classement toutes difficultés confondues
+        if (params.equals("rank")) {
+            int best = -1;
+            for (Difficulty d : Difficulty.values()) {
+                int r = plugin.getLeaderboardManager().getRank(player.getUniqueId(), d);
+                if (r != -1 && (best == -1 || r < best)) best = r;
+            }
+            return best == -1 ? "—" : String.valueOf(best);
+        }
+
+        // Classement du joueur par difficulté : rank_easy / rank_medium / rank_hard
         if (params.startsWith("rank_")) {
             String key = params.substring(5);
             Difficulty diff = Difficulty.fromKey(key);
