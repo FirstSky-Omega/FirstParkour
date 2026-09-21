@@ -99,14 +99,10 @@ public class ParkourExpansion extends PlaceholderExpansion {
             return String.valueOf(best);
         }
 
-        // Meilleur classement toutes difficultés confondues
+        // Classement global toutes difficultés confondues (meilleur score = max(easy,medium,hard))
         if (params.equals("rank")) {
-            int best = -1;
-            for (Difficulty d : Difficulty.values()) {
-                int r = plugin.getLeaderboardManager().getRank(player.getUniqueId(), d);
-                if (r != -1 && (best == -1 || r < best)) best = r;
-            }
-            return best == -1 ? "—" : String.valueOf(best);
+            int rank = plugin.getLeaderboardManager().getRankGlobal(player.getUniqueId());
+            return rank == -1 ? "—" : String.valueOf(rank);
         }
 
         // Classement du joueur par difficulté : rank_easy / rank_medium / rank_hard

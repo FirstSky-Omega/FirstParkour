@@ -134,6 +134,32 @@ public class DatabaseManager {
         }
     }
 
+    /** Classement global : trié par GREATEST(easy, medium, hard) DESC */
+    public List<PlayerData> getGlobalLeaderboard(int limit) {
+        List<PlayerData> list = new ArrayList<>();
+        String sql = "SELECT * FROM firstparkour_players " +
+                     "ORDER BY GREATEST(best_score_easy, best_score_medium, best_score_hard) DESC LIMIT ?";
+        try (Connection c = dataSource.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new PlayerData(
+                            UUID.fromString(rs.getString("uuid")),
+                            rs.getString("name"),
+                            rs.getInt("best_score_easy"),
+                            rs.getInt("best_score_medium"),
+                            rs.getInt("best_score_hard"),
+                            rs.getLong("total_jumps"),
+                            BlockTheme.fromKey(rs.getString("theme"))));
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Erreur classement global", e);
+        }
+        return list;
+    }
+
     public List<PlayerData> getLeaderboard(Difficulty difficulty, int limit) {
         String col = difficulty.getScoreColumn();
         List<PlayerData> list = new ArrayList<>();

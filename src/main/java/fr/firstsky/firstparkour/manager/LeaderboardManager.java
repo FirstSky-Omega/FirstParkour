@@ -15,6 +15,7 @@ public class LeaderboardManager {
 
     private final FirstParkour plugin;
     private final Map<Difficulty, List<PlayerData>> cache = new EnumMap<>(Difficulty.class);
+    private volatile List<PlayerData> globalCache = new ArrayList<>();
 
     public LeaderboardManager(FirstParkour plugin) {
         this.plugin = plugin;
@@ -31,6 +32,7 @@ public class LeaderboardManager {
             List<PlayerData> top = plugin.getDatabaseManager().getLeaderboard(d, 10);
             cache.put(d, top);
         }
+        globalCache = plugin.getDatabaseManager().getGlobalLeaderboard(100);
     }
 
     public List<PlayerData> getTop(Difficulty difficulty) {
@@ -45,12 +47,23 @@ public class LeaderboardManager {
     }
 
     /**
-     * Rang du joueur dans le classement, 1-based.
-     * Basé sur le cache local (top 10 par difficulté).
-     * Retourne -1 si le joueur n'est pas dans le top mis en cache.
+     * Rang du joueur dans le classement par difficulté, 1-based.
+     * Basé sur le cache top-10. Retourne -1 si hors cache.
      */
     public int getRank(java.util.UUID uuid, Difficulty difficulty) {
         List<PlayerData> top = cache.getOrDefault(difficulty, List.of());
+        for (int i = 0; i < top.size(); i++) {
+            if (top.get(i).getUuid().equals(uuid)) return i + 1;
+        }
+        return -1;
+    }
+
+    /**
+     * Rang global du joueur (toutes difficultés confondues, trié par meilleur score).
+     * Basé sur le cache top-100. Retourne -1 si hors cache.
+     */
+    public int getRankGlobal(java.util.UUID uuid) {
+        List<PlayerData> top = globalCache;
         for (int i = 0; i < top.size(); i++) {
             if (top.get(i).getUuid().equals(uuid)) return i + 1;
         }
