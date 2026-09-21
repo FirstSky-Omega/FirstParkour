@@ -131,11 +131,42 @@ themes:
     blocks: [JUNGLE_LOG, JUNGLE_PLANKS, MOSSY_COBBLESTONE, OAK_LEAVES, VINE]
 
 gui:
+  # Titre du menu principal.
+  # Pour un fond Nexo (texture full-screen via glyph) : '&8✦ &6FirstParkour &8✦'
+  # Remplacez  par le caractère Unicode de votre glyph Nexo.
   title: '&8✦ &6FirstParkour &8✦'
+
+  # Titre du menu des thèmes
+  theme-title: '&8✦ &6Thèmes de Blocs &8✦'
+
   rows: 3
-  # Slots pour chaque bouton (0-based)
+
+  # Slots des boutons (0-based)
   easy-slot: 11
   medium-slot: 13
   hard-slot: 15
+  themes-slot: 20
   stats-slot: 24
   close-slot: 26
+
+  # IDs d'items Nexo pour chaque bouton des menus.
+  # Laissez vide '' pour utiliser les items vanilla par défaut.
+  nexo-items:
+    filler: ''           # Fond de menu
+    easy: ''             # Bouton Facile   (ou déjà défini dans difficulties.easy.nexo-item)
+    medium: ''           # Bouton Normal
+    hard: ''             # Bouton Difficile
+    themes: ''           # Bouton Thèmes
+    stats: ''            # Bouton Stats
+    close: ''            # Bouton Fermer
+    back: ''             # Bouton Retour (menu thèmes)
+
+    # Items des thèmes dans le menu de sélection
+    theme-default: ''
+    theme-nether: ''
+    theme-end: ''
+    theme-ocean: ''
+    theme-winter: ''
+    theme-desert: ''
+    theme-sky: ''
+    theme-jungle: ''
