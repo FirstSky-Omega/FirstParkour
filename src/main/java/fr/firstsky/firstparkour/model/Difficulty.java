@@ -1,10 +1,5 @@
 package fr.firstsky.firstparkour.model;
 
-import org.bukkit.Material;
-
-import java.util.ArrayList;
-import java.util.List;
-
 public enum Difficulty {
     EASY("easy"),
     MEDIUM("medium"),
@@ -12,26 +7,26 @@ public enum Difficulty {
 
     private final String key;
 
-    Difficulty(String key) {
-        this.key = key;
-    }
+    Difficulty(String key) { this.key = key; }
 
-    public String getKey() {
-        return key;
-    }
+    public String getKey() { return key; }
 
+    /** Accepte les noms anglais ET français (facile, normal, difficile). */
     public static Difficulty fromKey(String key) {
-        for (Difficulty d : values()) {
-            if (d.key.equalsIgnoreCase(key)) return d;
-        }
-        return null;
+        if (key == null) return null;
+        return switch (key.toLowerCase()) {
+            case "easy",   "facile"    -> EASY;
+            case "medium", "normal"    -> MEDIUM;
+            case "hard",   "difficile" -> HARD;
+            default -> null;
+        };
     }
 
     public String getScoreColumn() {
         return switch (this) {
-            case EASY -> "best_score_easy";
+            case EASY   -> "best_score_easy";
             case MEDIUM -> "best_score_medium";
-            case HARD -> "best_score_hard";
+            case HARD   -> "best_score_hard";
         };
     }
 }
