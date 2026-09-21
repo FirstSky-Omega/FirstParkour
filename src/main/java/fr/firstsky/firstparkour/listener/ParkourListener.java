@@ -4,12 +4,14 @@ import fr.firstsky.firstparkour.FirstParkour;
 import fr.firstsky.firstparkour.model.ParkourSession;
 import fr.firstsky.firstparkour.util.MessageUtil;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.event.world.WorldUnloadEvent;
 
 import java.util.Map;
 import java.util.UUID;
@@ -108,5 +110,30 @@ public class ParkourListener implements Listener {
             MessageUtil.send(player, msg);
         }
         wasOnGround.remove(player.getUniqueId());
+    }
+
+    /**
+     * Compatibilité Worlds (thenextlvl) : si le monde de parkour est déchargé
+     * (unload, delete, regenerate…), on stoppe proprement toutes les sessions actives dans ce monde.
+     */
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onWorldUnload(WorldUnloadEvent event) {
+        World world = event.getWorld();
+        String configuredWorld = plugin.getConfig().getString("parkour.world", "");
+        if (configuredWorld.isBlank() || !configuredWorld.equalsIgnoreCase(world.getName())) return;
+
+        String prefix = plugin.getConfig().getString("messages.prefix", "");
+        String msg = prefix + plugin.getConfig().getString(
+                "messages.world-unloaded", "&cLe monde de parkour a été déchargé. Session arrêtée.");
+
+        for (var session : plugin.getParkourManager().getAllSessions()) {
+            var p = plugin.getServer().getPlayer(session.getPlayerUuid());
+            if (p == null || !world.equals(p.getWorld())) continue;
+            plugin.getSpectatorManager().onPlayerQuit(p);
+            plugin.getDuelManager().onPlayerQuit(p);
+            plugin.getParkourManager().stopSession(p, false);
+            MessageUtil.send(p, msg);
+            wasOnGround.remove(p.getUniqueId());
+        }
     }
 }

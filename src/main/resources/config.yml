@@ -107,6 +107,9 @@ messages:
   stats-hard: '  &7Difficile: &c{score}'
   stats-jumps: '  &7Total sauts: &6{jumps}'
 
+  # Worlds
+  world-unloaded: '&cLe monde de parkour a été déchargé. Session arrêtée.'
+
   # Duel
   duel-reconnect: '&aReconnecté ! Score restauré: &6{score}'
   duel-opponent-disconnected: '&e{player} &7s''est déconnecté. &c{seconds}s &7pour reconnecter.'

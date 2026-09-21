@@ -10,6 +10,7 @@ softdepend:
   - PlaceholderAPI
   - Nexo
   - TAB
+  - Worlds
 
 commands:
   parkour:
