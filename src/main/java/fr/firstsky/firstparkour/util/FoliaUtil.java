@@ -35,4 +35,17 @@ public final class FoliaUtil {
     public static void runGlobal(Plugin plugin, Runnable task) {
         plugin.getServer().getGlobalRegionScheduler().execute(plugin, task);
     }
+
+    /**
+     * Téléporte un joueur de façon Folia-compatible.
+     * afterTeleport est exécuté sur l'entity-scheduler du joueur après la téléportation.
+     */
+    public static void teleport(Plugin plugin, org.bukkit.entity.Player player,
+                                Location destination, Runnable afterTeleport) {
+        player.teleportAsync(destination).thenAccept(success -> {
+            if (success && afterTeleport != null) {
+                player.getScheduler().execute(plugin, afterTeleport, null, 1L);
+            }
+        });
+    }
 }

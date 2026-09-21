@@ -133,14 +133,16 @@ public class ParkourCommand implements CommandExecutor, TabCompleter {
             case "setspawn", "definirespawn" -> {
                 if (!player.hasPermission("firstparkour.admin")) { noPerms(player, prefix); return true; }
                 var loc = player.getLocation();
-                plugin.getConfig().set("spawn.world", loc.getWorld().getName());
-                plugin.getConfig().set("spawn.x", loc.getX());
-                plugin.getConfig().set("spawn.y", loc.getY());
-                plugin.getConfig().set("spawn.z", loc.getZ());
-                plugin.getConfig().set("spawn.yaw", loc.getYaw());
-                plugin.getConfig().set("spawn.pitch", loc.getPitch());
+                plugin.getConfig().set("parkour.world",       loc.getWorld().getName());
+                plugin.getConfig().set("parkour.spawn.x",     loc.getX());
+                plugin.getConfig().set("parkour.spawn.y",     loc.getY());
+                plugin.getConfig().set("parkour.spawn.z",     loc.getZ());
+                plugin.getConfig().set("parkour.spawn.yaw",   (double) loc.getYaw());
+                plugin.getConfig().set("parkour.spawn.pitch", (double) loc.getPitch());
                 plugin.saveConfig();
-                MessageUtil.send(player, prefix + plugin.getConfig().getString("messages.spawn-set"));
+                MessageUtil.send(player, prefix + plugin.getConfig()
+                        .getString("messages.spawn-set", "&aSpawn défini !")
+                        .replace("{world}", loc.getWorld().getName()));
             }
 
             case "recharger", "reload" -> {

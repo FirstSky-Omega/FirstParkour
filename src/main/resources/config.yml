@@ -6,16 +6,21 @@ mysql:
   password: ''
   pool-size: 10
 
-# Spawn de départ du parkour (laisser vide pour utiliser la position actuelle du joueur)
-spawn:
-  world: ''
-  x: 0.0
-  y: 64.0
-  z: 0.0
-  yaw: 0.0
-  pitch: 0.0
-
 parkour:
+  # Monde dédié au parkour.
+  # Laissez vide '' pour générer le parkour là où se trouve le joueur.
+  # Le monde doit exister sur le serveur (créé via un plugin de gestion de mondes ou dans bukkit.yml).
+  world: ''
+
+  # Point de départ dans le monde de parkour.
+  # Utilisez /parkour definirespawn pour le définir en jeu.
+  spawn:
+    x: 0.0
+    y: 100.0
+    z: 0.0
+    yaw: 0.0
+    pitch: 0.0
+
   # Nombre de blocs générés en avance
   blocks-ahead: 3
   # Nombre de blocs conservés derrière le joueur
@@ -86,7 +91,8 @@ messages:
   no-permission: '&cVous n''avez pas la permission.'
   already-playing: '&cVous jouez déjà ! Faites &e/parkour stop &cpour arrêter.'
   not-playing: '&cVous ne jouez pas au parkour.'
-  spawn-set: '&aSpawn du parkour défini ici.'
+  spawn-set: '&aSpawn du parkour défini ici (monde: &e{world}&a).'
+  world-not-found: '&cMonde de parkour &e{world} &cintrouvable ! Vérifiez la config.'
   reload: '&aConfiguration rechargée.'
   score-actionbar: '&6Score: &e{score} &7| &6Record: &e{best}'
   fall: '&cVous êtes tombé ! Score final: &6{score} &cblocs.'
