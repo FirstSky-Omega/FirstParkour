@@ -1,8 +1,7 @@
 name: FirstParkour
 version: 1.0.0
 main: fr.firstsky.firstparkour.FirstParkour
-api-version: '1.21'
-folia-supported: true
+api-version: '26.2'
 description: Parkour infini per-joueur avec classements
 authors: [FirstSky]
 
