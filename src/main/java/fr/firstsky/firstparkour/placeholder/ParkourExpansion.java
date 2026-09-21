@@ -13,12 +13,18 @@ import org.jetbrains.annotations.Nullable;
  * Placeholders disponibles :
  *
  * %firstparkour_score%                      → score actuel (0 si non en jeu)
- * %firstparkour_best_easy%                  → record facile
- * %firstparkour_best_medium%                → record normal
- * %firstparkour_best_hard%                  → record difficile
  * %firstparkour_playing%                    → true/false
  * %firstparkour_difficulty%                 → difficulté en cours
  * %firstparkour_total_jumps%                → total de sauts
+ *
+ * %firstparkour_best_easy%                  → record personnel facile
+ * %firstparkour_best_medium%                → record personnel normal
+ * %firstparkour_best_hard%                  → record personnel difficile
+ * %firstparkour_record%                     → meilleur record toutes difficultés confondues
+ *
+ * %firstparkour_rank_easy%                  → classement du joueur en facile (— si hors top)
+ * %firstparkour_rank_medium%                → classement du joueur en normal
+ * %firstparkour_rank_hard%                  → classement du joueur en difficile
  *
  * %firstparkour_top_easy_1_name%            → nom du 1er du classement facile
  * %firstparkour_top_easy_1_score%           → score du 1er du classement facile
@@ -74,13 +80,31 @@ public class ParkourExpansion extends PlaceholderExpansion {
             return data != null ? String.valueOf(data.getTotalJumps()) : "0";
         }
 
-        // Records personnels
+        // Records personnels par difficulté
         if (params.startsWith("best_")) {
             String key = params.substring(5);
             Difficulty diff = Difficulty.fromKey(key);
             if (diff == null) return "0";
             PlayerData data = plugin.getParkourManager().getPlayerData(player.getUniqueId());
             return data != null ? String.valueOf(data.getBestScore(diff)) : "0";
+        }
+
+        // Meilleur record toutes difficultés confondues
+        if (params.equals("record")) {
+            PlayerData data = plugin.getParkourManager().getPlayerData(player.getUniqueId());
+            if (data == null) return "0";
+            int best = Math.max(data.getBestScoreEasy(),
+                       Math.max(data.getBestScoreMedium(), data.getBestScoreHard()));
+            return String.valueOf(best);
+        }
+
+        // Classement du joueur : rank_easy / rank_medium / rank_hard
+        if (params.startsWith("rank_")) {
+            String key = params.substring(5);
+            Difficulty diff = Difficulty.fromKey(key);
+            if (diff == null) return "—";
+            int rank = plugin.getLeaderboardManager().getRank(player.getUniqueId(), diff);
+            return rank == -1 ? "—" : String.valueOf(rank);
         }
 
         // Classement: top_<difficulty>_<rank>_name|score

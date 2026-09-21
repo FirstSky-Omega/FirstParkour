@@ -44,6 +44,19 @@ public class LeaderboardManager {
         return top.get(rank - 1);
     }
 
+    /**
+     * Rang du joueur dans le classement, 1-based.
+     * Basé sur le cache local (top 10 par difficulté).
+     * Retourne -1 si le joueur n'est pas dans le top mis en cache.
+     */
+    public int getRank(java.util.UUID uuid, Difficulty difficulty) {
+        List<PlayerData> top = cache.getOrDefault(difficulty, List.of());
+        for (int i = 0; i < top.size(); i++) {
+            if (top.get(i).getUuid().equals(uuid)) return i + 1;
+        }
+        return -1;
+    }
+
     /** Force un refresh immédiat en async */
     public void forceRefresh() {
         FoliaUtil.runAsync(plugin, this::refreshAll);
