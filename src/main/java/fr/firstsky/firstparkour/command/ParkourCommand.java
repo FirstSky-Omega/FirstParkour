@@ -163,24 +163,51 @@ public class ParkourCommand implements CommandExecutor, TabCompleter {
     @Override
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command cmd,
                                      @NotNull String label, @NotNull String[] args) {
+        String current = args[args.length - 1].toLowerCase();
+
         if (args.length == 1) {
-            return List.of("arreter", "stats", "classement", "duel", "themes",
-                           "definirespawn", "recharger");
+            List<String> subs = new ArrayList<>();
+            subs.add("arreter");
+            subs.add("stats");
+            subs.add("classement");
+            subs.add("duel");
+            subs.add("themes");
+            if (sender.hasPermission("firstparkour.admin")) {
+                subs.add("definirespawn");
+                subs.add("recharger");
+            }
+            return filter(subs, current);
         }
+
         if (args.length == 2) {
             return switch (args[0].toLowerCase()) {
-                case "classement", "top" -> List.of("facile", "normal", "difficile");
+                case "classement", "top" -> filter(DIFFICULTIES, current);
                 case "duel" -> {
                     List<String> names = new ArrayList<>(List.of("accepter", "refuser"));
-                    plugin.getServer().getOnlinePlayers().forEach(p -> names.add(p.getName()));
-                    yield names;
+                    plugin.getServer().getOnlinePlayers().stream()
+                            .map(Player::getName)
+                            .forEach(names::add);
+                    yield filter(names, current);
                 }
                 default -> List.of();
             };
         }
+
         if (args.length == 3 && args[0].equalsIgnoreCase("duel")) {
-            return List.of("facile", "normal", "difficile");
+            return filter(DIFFICULTIES, current);
         }
+
         return List.of();
+    }
+
+    private static final List<String> DIFFICULTIES = List.of("facile", "normal", "difficile");
+
+    private static List<String> filter(List<String> options, String prefix) {
+        if (prefix.isEmpty()) return new ArrayList<>(options);
+        List<String> result = new ArrayList<>();
+        for (String s : options) {
+            if (s.toLowerCase().startsWith(prefix)) result.add(s);
+        }
+        return result;
     }
 }
