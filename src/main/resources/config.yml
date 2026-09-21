@@ -1,0 +1,112 @@
+mysql:
+  host: localhost
+  port: 3306
+  database: firstparkour
+  username: root
+  password: ''
+  pool-size: 10
+
+# Spawn de départ du parkour (laisser vide pour utiliser la position actuelle du joueur)
+spawn:
+  world: ''
+  x: 0.0
+  y: 64.0
+  z: 0.0
+  yaw: 0.0
+  pitch: 0.0
+
+parkour:
+  # Nombre de blocs générés en avance
+  blocks-ahead: 3
+  # Nombre de blocs conservés derrière le joueur
+  history-size: 12
+  # Mettre le joueur en mode ADVENTURE pendant le parkour
+  force-adventure: true
+  # Désactiver les dégâts pendant le parkour
+  disable-damage: true
+  # Envoyer le score en action bar
+  action-bar: true
+  # Fréquence d'actualisation du classement (en secondes)
+  leaderboard-refresh: 60
+
+difficulties:
+  easy:
+    display-name: '&aFacile'
+    nexo-item: 'parkour_easy'
+    min-distance: 2
+    max-distance: 3
+    min-height: -1
+    max-height: 1
+    angle-spread: 25.0
+    blocks:
+      - GRASS_BLOCK
+      - OAK_PLANKS
+      - BIRCH_PLANKS
+      - DIRT
+      - STONE
+      - COBBLESTONE
+
+  medium:
+    display-name: '&eNormal'
+    nexo-item: 'parkour_medium'
+    min-distance: 2
+    max-distance: 4
+    min-height: -1
+    max-height: 2
+    angle-spread: 40.0
+    blocks:
+      - STONE
+      - COBBLESTONE
+      - OAK_PLANKS
+      - BRICKS
+      - SANDSTONE
+      - SPRUCE_PLANKS
+
+  hard:
+    display-name: '&cDifficile'
+    nexo-item: 'parkour_hard'
+    min-distance: 3
+    max-distance: 5
+    min-height: -2
+    max-height: 2
+    angle-spread: 55.0
+    blocks:
+      - OBSIDIAN
+      - NETHERRACK
+      - MAGMA_BLOCK
+      - BLACKSTONE
+      - END_STONE
+      - SOUL_SAND
+
+messages:
+  prefix: '&8[&6FirstParkour&8] '
+  start: '&aParkour &6{difficulty} &adémarré ! Bonne chance !'
+  stop: '&cParkour arrêté. Score final: &6{score} &cblocs.'
+  new-record: '&6✦ NOUVEAU RECORD ! &e{score} &6blocs !'
+  no-permission: '&cVous n''avez pas la permission.'
+  already-playing: '&cVous jouez déjà ! Faites &e/parkour stop &cpour arrêter.'
+  not-playing: '&cVous ne jouez pas au parkour.'
+  spawn-set: '&aSpawn du parkour défini ici.'
+  reload: '&aConfiguration rechargée.'
+  score-actionbar: '&6Score: &e{score} &7| &6Record: &e{best}'
+  fall: '&cVous êtes tombé ! Score final: &6{score} &cblocs.'
+
+  top-header: '&8&m------&r &6Classement Parkour &7({difficulty}) &8&m------'
+  top-line: '&7#{rank} &e{name} &7- &6{score} blocs'
+  top-empty: '&7Aucun score enregistré.'
+
+  stats-header: '&8&m------&r &6Vos Stats &8&m------'
+  stats-easy: '  &7Facile: &a{score}'
+  stats-medium: '  &7Normal: &e{score}'
+  stats-hard: '  &7Difficile: &c{score}'
+  stats-jumps: '  &7Total sauts: &6{jumps}'
+
+gui:
+  title: '&8✦ &6FirstParkour &8✦'
+  rows: 3
+  # Slots pour chaque bouton (0-based)
+  easy-slot: 11
+  medium-slot: 13
+  hard-slot: 15
+  stats-slot: 24
+  close-slot: 26

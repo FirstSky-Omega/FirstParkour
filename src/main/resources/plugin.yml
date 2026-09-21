@@ -1,0 +1,26 @@
+name: FirstParkour
+version: 1.0.0
+main: fr.firstsky.firstparkour.FirstParkour
+api-version: '1.21'
+folia-supported: true
+description: Parkour infini per-joueur avec classements
+authors: [FirstSky]
+
+softdepend:
+  - PlaceholderAPI
+  - Nexo
+  - TAB
+
+commands:
+  parkour:
+    description: Commande principale du parkour
+    usage: /parkour [stop|stats|top|setspawn|reload]
+    aliases: [pk]
+
+permissions:
+  firstparkour.use:
+    description: Permet de jouer au parkour
+    default: true
+  firstparkour.admin:
+    description: Commandes administrateur
+    default: op
