@@ -1,6 +1,6 @@
 # 🟠 FirstParkour
 
-Plugin Minecraft **Paper 1.21 / Folia** — Parkour infini per-joueur avec duels, thèmes de blocs et classements.
+Plugin Minecraft **Folia 26.2** — Parkour infini per-joueur avec duels, thèmes de blocs et classements.
 
 ---
 
@@ -22,7 +22,7 @@ Plugin Minecraft **Paper 1.21 / Folia** — Parkour infini per-joueur avec duels
 
 | Dépendance | Version | Obligatoire |
 |---|---|---|
-| Paper / Folia | 1.21.x | ✅ |
+| Folia | 26.2 | ✅ |
 | MySQL | 5.7+ / 8.x | ✅ |
 | PlaceholderAPI | 2.11+ | ⬜ optionnel |
 | Nexo | 0.9+ | ⬜ optionnel |
@@ -162,14 +162,14 @@ fr.firstsky.firstparkour/
     └── NexoUtil.java           — Chargement sécurisé items Nexo
 ```
 
-**Folia** : toutes les opérations sur les blocs passent par `RegionScheduler`, les actions joueur par `EntityScheduler`, la base de données par `AsyncScheduler`.
+**Folia 26.2** : toutes les opérations sur les blocs passent par `RegionScheduler`, les actions joueur par `EntityScheduler`, la base de données par `AsyncScheduler`.
 
 ---
 
 ## 🔨 Build
 
 ```bash
-# JDK 26 requis
+# JDK 26 requis, cible paper-api 26.2.build.127-stable
 mvn clean package
 # JAR dans target/FirstParkour-1.0.0.jar
 ```
