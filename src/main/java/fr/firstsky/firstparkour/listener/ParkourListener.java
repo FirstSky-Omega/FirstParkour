@@ -57,14 +57,25 @@ public class ParkourListener implements Listener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
-        plugin.getParkourManager().loadPlayerAsync(event.getPlayer());
+        var player = event.getPlayer();
+        // Tente de reprendre un duel interrompu
+        if (plugin.getDuelManager().isAwaitingReconnect(player)) {
+            plugin.getDuelManager().onPlayerReconnect(player);
+        } else {
+            plugin.getParkourManager().loadPlayerAsync(player);
+        }
     }
 
     @EventHandler
     public void onPlayerQuit(PlayerQuitEvent event) {
-        plugin.getDuelManager().onPlayerQuit(event.getPlayer());
-        plugin.getParkourManager().unloadPlayer(event.getPlayer());
-        wasOnGround.remove(event.getPlayer().getUniqueId());
+        var player = event.getPlayer();
+        plugin.getSpectatorManager().onPlayerQuit(player);
+        plugin.getDuelManager().onPlayerQuit(player);
+        // Si le joueur est en duel, onPlayerQuit gère la grâce (ne pas unload)
+        if (!plugin.getDuelManager().isAwaitingReconnect(player)) {
+            plugin.getParkourManager().unloadPlayer(player);
+        }
+        wasOnGround.remove(player.getUniqueId());
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)

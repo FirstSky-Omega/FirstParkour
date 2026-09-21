@@ -14,7 +14,7 @@ softdepend:
 commands:
   parkour:
     description: Commande principale du parkour
-    usage: /parkour [arreter|stats|classement|duel|themes|definirespawn|recharger]
+    usage: /parkour [arreter|stats|classement|duel|themes|defi|spectater|definirespawn|recharger]
     aliases: [pk]
 
 permissions:

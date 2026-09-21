@@ -129,6 +129,54 @@ public class ParkourCommand implements CommandExecutor, TabCompleter {
                 plugin.getThemeMenu().open(player);
             }
 
+            // ── /parkour defi ──────────────────────────────────────────────────
+            case "defi", "daily" -> {
+                if (!player.hasPermission("firstparkour.use")) { noPerms(player, prefix); return true; }
+                var dcm = plugin.getDailyChallengeManager();
+                String diffName = plugin.getConfig().getString(
+                        "difficulties." + dcm.getTodayDifficulty().getKey() + ".display-name",
+                        dcm.getTodayDifficulty().getKey());
+                MessageUtil.send(player, prefix + "&6✦ Défi du jour &8— &7Difficulté : " + MessageUtil.color(diffName));
+                var top = dcm.getDailyTop();
+                if (top.isEmpty()) {
+                    MessageUtil.send(player, prefix + "&7Aucun score encore.");
+                } else {
+                    for (int i = 0; i < top.size(); i++) {
+                        var e = top.get(i);
+                        MessageUtil.send(player, plugin.getConfig().getString("messages.top-line",
+                                        "&7#{rank} &e{name} &7- &6{score} blocs")
+                                .replace("{rank}", String.valueOf(i + 1))
+                                .replace("{name}", e.name())
+                                .replace("{score}", String.valueOf(e.score())));
+                    }
+                }
+                int myRank  = dcm.getDailyRank(player.getUniqueId());
+                int myScore = dcm.getDailyScore(player.getUniqueId());
+                if (myRank > 0) {
+                    MessageUtil.send(player, prefix + "&7Votre position : &e#" + myRank
+                            + " &7(&6" + myScore + " blocs&7)");
+                }
+            }
+
+            // ── /parkour spectater <joueur> ────────────────────────────────────
+            case "spectater", "spectate", "spec" -> {
+                if (!player.hasPermission("firstparkour.use")) { noPerms(player, prefix); return true; }
+                if (args.length < 2) {
+                    if (plugin.getSpectatorManager().isSpectating(player)) {
+                        plugin.getSpectatorManager().stopSpectating(player);
+                    } else {
+                        MessageUtil.send(player, prefix + "&7Usage : &e/parkour spectater <joueur>");
+                    }
+                    return true;
+                }
+                Player target = plugin.getServer().getPlayer(args[1]);
+                if (target == null) {
+                    MessageUtil.send(player, prefix + "&cJoueur introuvable ou hors-ligne.");
+                    return true;
+                }
+                plugin.getSpectatorManager().startSpectating(player, target);
+            }
+
             // ── Admin ─────────────────────────────────────────────────────────
             case "setspawn", "definirespawn" -> {
                 if (!player.hasPermission("firstparkour.admin")) { noPerms(player, prefix); return true; }
@@ -174,6 +222,8 @@ public class ParkourCommand implements CommandExecutor, TabCompleter {
             subs.add("classement");
             subs.add("duel");
             subs.add("themes");
+            subs.add("defi");
+            subs.add("spectater");
             if (sender.hasPermission("firstparkour.admin")) {
                 subs.add("definirespawn");
                 subs.add("recharger");
@@ -184,7 +234,7 @@ public class ParkourCommand implements CommandExecutor, TabCompleter {
         if (args.length == 2) {
             return switch (args[0].toLowerCase()) {
                 case "classement", "top" -> filter(DIFFICULTIES, current);
-                case "duel" -> {
+                case "duel", "spectater", "spectate", "spec" -> {
                     List<String> names = new ArrayList<>(List.of("accepter", "refuser"));
                     plugin.getServer().getOnlinePlayers().stream()
                             .map(Player::getName)

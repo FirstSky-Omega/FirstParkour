@@ -6,6 +6,7 @@ import fr.firstsky.firstparkour.model.Difficulty;
 import fr.firstsky.firstparkour.model.DuelInvite;
 import fr.firstsky.firstparkour.util.FoliaUtil;
 import fr.firstsky.firstparkour.util.MessageUtil;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
@@ -25,6 +26,11 @@ public class DuelManager {
 
     /** Duels actifs, clé = UUID d'un des deux joueurs */
     private final Map<UUID, ActiveDuel> activeDuels = new ConcurrentHashMap<>();
+
+    /** Joueurs déconnectés en attente de reconnexion : UUID → score au moment de la déco */
+    private final Map<UUID, Integer>       disconnectScores = new ConcurrentHashMap<>();
+    /** Timers de reconnexion actifs */
+    private final Map<UUID, ScheduledTask> disconnectTimers = new ConcurrentHashMap<>();
 
     public DuelManager(FirstParkour plugin) {
         this.plugin = plugin;
@@ -238,13 +244,97 @@ public class DuelManager {
         return activeDuels.get(player.getUniqueId());
     }
 
-    /** Nettoie les données du joueur à la déconnexion */
+    // ──────────────────────────────────────────────
+    //  Protection déconnexion
+    // ──────────────────────────────────────────────
+
+    /** Appelé à la déconnexion : démarre la grâce si le joueur est en duel. */
     public void onPlayerQuit(Player player) {
         pendingInvites.remove(player.getUniqueId());
+
         ActiveDuel duel = activeDuels.get(player.getUniqueId());
-        if (duel != null && !duel.isEnded()) {
-            // Le joueur déconnecté perd le duel
-            onDuelEnd(player, 0);
+        if (duel == null || duel.isEnded()) return;
+
+        int score = 0;
+        var session = plugin.getParkourManager().getSession(player);
+        if (session != null) score = session.getScore();
+        final int savedScore = score;
+
+        // Sauvegarde sans stopper la session (les blocs restent en monde)
+        plugin.getParkourManager().saveDataOnly(player);
+
+        disconnectScores.put(player.getUniqueId(), savedScore);
+
+        String prefix = plugin.getConfig().getString("messages.prefix", "");
+        long graceSecs = plugin.getConfig().getLong("duel.disconnect-grace-seconds", 30L);
+
+        // Prévient l'adversaire
+        UUID opUuid = duel.getOpponent(player.getUniqueId());
+        Player opponent = plugin.getServer().getPlayer(opUuid);
+        if (opponent != null) {
+            String msg = prefix + plugin.getConfig().getString("messages.duel-opponent-disconnected",
+                    "&e{player} &7s'est déconnecté. &c{seconds}s &7pour reconnecter.")
+                    .replace("{player}", player.getName())
+                    .replace("{seconds}", String.valueOf(graceSecs));
+            FoliaUtil.runForEntity(plugin, opponent, () -> MessageUtil.send(opponent, msg));
         }
+
+        ScheduledTask timer = FoliaUtil.runAsyncDelayedCancellable(plugin, () -> {
+            if (disconnectScores.containsKey(player.getUniqueId())) {
+                // Grâce expirée : le déconnecté perd
+                disconnectScores.remove(player.getUniqueId());
+                disconnectTimers.remove(player.getUniqueId());
+                ActiveDuel d2 = activeDuels.remove(player.getUniqueId());
+                if (d2 != null && !d2.isEnded()) {
+                    d2.setEnded(true);
+                    activeDuels.remove(opUuid);
+                    Player op = plugin.getServer().getPlayer(opUuid);
+                    if (op != null) {
+                        int opScore = 0;
+                        var opSess = plugin.getParkourManager().getSession(op);
+                        if (opSess != null) opScore = opSess.getScore();
+                        plugin.getParkourManager().stopSession(op, false);
+                        String winMsg = prefix + plugin.getConfig().getString("messages.duel-win-by-dc",
+                                "&a✔ Victoire ! Votre adversaire s'est déconnecté. Score: &6{score}")
+                                .replace("{score}", String.valueOf(opScore));
+                        final int fs = opScore;
+                        FoliaUtil.runForEntity(plugin, op, () -> {
+                            MessageUtil.sendTitle(op, "&a✔ VICTOIRE !", "&7Adversaire déconnecté", 10, 60, 15);
+                            MessageUtil.send(op, winMsg);
+                        });
+                    }
+                }
+            }
+        }, graceSecs * 1000L);
+
+        disconnectTimers.put(player.getUniqueId(), timer);
+    }
+
+    /** Appelé à la reconnexion pour reprendre le duel si dans les délais. */
+    public boolean onPlayerReconnect(Player player) {
+        if (!disconnectScores.containsKey(player.getUniqueId())) return false;
+
+        int savedScore = disconnectScores.remove(player.getUniqueId());
+        ScheduledTask timer = disconnectTimers.remove(player.getUniqueId());
+        if (timer != null) timer.cancel();
+
+        ActiveDuel duel = activeDuels.get(player.getUniqueId());
+        if (duel == null || duel.isEnded()) return false;
+
+        String prefix = plugin.getConfig().getString("messages.prefix", "");
+        UUID opUuid = duel.getOpponent(player.getUniqueId());
+        Player opponent = plugin.getServer().getPlayer(opUuid);
+        if (opponent != null) {
+            String msg = prefix + plugin.getConfig().getString("messages.duel-opponent-reconnected",
+                    "&e{player} &7a reconnecté au duel !").replace("{player}", player.getName());
+            FoliaUtil.runForEntity(plugin, opponent, () -> MessageUtil.send(opponent, msg));
+        }
+
+        plugin.getParkourManager().restoreSessionForDuel(player, duel.getDifficulty(), savedScore);
+        return true;
+    }
+
+    public boolean isAwaitingReconnect(Player player) {
+        return disconnectScores.containsKey(player.getUniqueId());
     }
 }

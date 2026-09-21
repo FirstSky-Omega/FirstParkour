@@ -82,6 +82,11 @@ public class ParkourSession {
         if (score > personalBest) personalBest = score;
     }
 
+    public void setScore(int score) {
+        this.score = score;
+        if (score > personalBest) personalBest = score;
+    }
+
     public UUID getPlayerUuid() { return playerUuid; }
     public Difficulty getDifficulty() { return difficulty; }
     public int getScore() { return score; }

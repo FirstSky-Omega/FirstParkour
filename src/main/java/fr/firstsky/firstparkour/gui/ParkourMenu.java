@@ -14,6 +14,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class ParkourMenu implements Listener {
@@ -70,6 +71,42 @@ public class ParkourMenu implements Listener {
         inv.setItem(slot("stats-slot", 24),
                 NexoUtil.build(nid("stats"), Material.BOOK, "&6Vos Statistiques", statsLore));
 
+        // ── Classement global ─────────────────────────────────────────────────
+        var globalTop = plugin.getLeaderboardManager().getGlobalTop(3);
+        List<String> globalLore = new ArrayList<>();
+        globalLore.add("");
+        if (globalTop.isEmpty()) {
+            globalLore.add("&7Aucun score enregistré.");
+        } else {
+            for (int i = 0; i < globalTop.size(); i++) {
+                var pd = globalTop.get(i);
+                int best = Math.max(pd.getBestScoreEasy(), Math.max(pd.getBestScoreMedium(), pd.getBestScoreHard()));
+                globalLore.add("&7#" + (i + 1) + " &e" + pd.getName() + " &7- &6" + best + " blocs");
+            }
+        }
+        globalLore.add("");
+        globalLore.add("&eCliquez pour le classement complet");
+        inv.setItem(slot("global-slot", 22),
+                NexoUtil.build(nid("global"), Material.NETHER_STAR, "&6Classement Global", globalLore));
+
+        // ── Défi quotidien ────────────────────────────────────────────────────
+        var dcm = plugin.getDailyChallengeManager();
+        String dailyDiffName = plugin.getConfig().getString(
+                "difficulties." + dcm.getTodayDifficulty().getKey() + ".display-name",
+                dcm.getTodayDifficulty().getKey());
+        int myDailyRank  = dcm.getDailyRank(player.getUniqueId());
+        int myDailyScore = dcm.getDailyScore(player.getUniqueId());
+        List<String> dailyLore = new ArrayList<>();
+        dailyLore.add("");
+        dailyLore.add("&7Mode du jour : " + MessageUtil.color(dailyDiffName));
+        dailyLore.add(myDailyRank > 0
+                ? "&7Votre position : &e#" + myDailyRank + " &7(&6" + myDailyScore + " blocs&7)"
+                : "&7Vous n'avez pas encore participé.");
+        dailyLore.add("");
+        dailyLore.add("&eCliquez pour voir le classement");
+        inv.setItem(slot("daily-slot", 4),
+                NexoUtil.build(nid("daily"), Material.CLOCK, "&6Défi du Jour", dailyLore));
+
         // ── Fermer ────────────────────────────────────────────────────────────
         inv.setItem(slot("close-slot", 26),
                 NexoUtil.build(nid("close"), Material.BARRIER, "&cFermer", List.of()));
@@ -105,6 +142,24 @@ public class ParkourMenu implements Listener {
         else if (slot == slot("medium-slot", 13)) plugin.getParkourManager().startSession(player, Difficulty.MEDIUM);
         else if (slot == slot("hard-slot", 15))   plugin.getParkourManager().startSession(player, Difficulty.HARD);
         else if (slot == slot("themes-slot", 20)) plugin.getThemeMenu().open(player);
+        else if (slot == slot("global-slot", 22)) {
+            // Affiche le classement global en chat
+            String prefix = plugin.getConfig().getString("messages.prefix", "");
+            MessageUtil.send(player, prefix + "&8&m----&r &6Classement Global &8&m----");
+            var top = plugin.getLeaderboardManager().getGlobalTop(10);
+            for (int i = 0; i < top.size(); i++) {
+                var pd = top.get(i);
+                int best = Math.max(pd.getBestScoreEasy(), Math.max(pd.getBestScoreMedium(), pd.getBestScoreHard()));
+                MessageUtil.send(player, plugin.getConfig().getString("messages.top-line",
+                                "&7#{rank} &e{name} &7- &6{score} blocs")
+                        .replace("{rank}", String.valueOf(i + 1))
+                        .replace("{name}", pd.getName())
+                        .replace("{score}", String.valueOf(best)));
+            }
+        }
+        else if (slot == slot("daily-slot", 4)) {
+            player.performCommand("parkour defi");
+        }
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────

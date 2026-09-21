@@ -5,9 +5,13 @@ import fr.firstsky.firstparkour.database.DatabaseManager;
 import fr.firstsky.firstparkour.gui.ParkourMenu;
 import fr.firstsky.firstparkour.gui.ThemeMenu;
 import fr.firstsky.firstparkour.listener.ParkourListener;
+import fr.firstsky.firstparkour.manager.DailyChallengeManager;
 import fr.firstsky.firstparkour.manager.DuelManager;
 import fr.firstsky.firstparkour.manager.LeaderboardManager;
 import fr.firstsky.firstparkour.manager.ParkourManager;
+import fr.firstsky.firstparkour.manager.RewardManager;
+import fr.firstsky.firstparkour.manager.SoundManager;
+import fr.firstsky.firstparkour.manager.SpectatorManager;
 import fr.firstsky.firstparkour.placeholder.ParkourExpansion;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -17,12 +21,16 @@ public class FirstParkour extends JavaPlugin {
 
     private static FirstParkour instance;
 
-    private DatabaseManager databaseManager;
-    private ParkourManager parkourManager;
-    private DuelManager duelManager;
-    private LeaderboardManager leaderboardManager;
-    private ParkourMenu parkourMenu;
-    private ThemeMenu themeMenu;
+    private DatabaseManager        databaseManager;
+    private ParkourManager         parkourManager;
+    private DuelManager            duelManager;
+    private LeaderboardManager     leaderboardManager;
+    private SoundManager           soundManager;
+    private RewardManager          rewardManager;
+    private DailyChallengeManager  dailyChallengeManager;
+    private SpectatorManager       spectatorManager;
+    private ParkourMenu            parkourMenu;
+    private ThemeMenu              themeMenu;
 
     @Override
     public void onEnable() {
@@ -32,13 +40,21 @@ public class FirstParkour extends JavaPlugin {
         databaseManager = new DatabaseManager(this);
         databaseManager.init();
 
-        parkourManager = new ParkourManager(this);
-        duelManager = new DuelManager(this);
-        leaderboardManager = new LeaderboardManager(this);
+        soundManager          = new SoundManager(this);
+        rewardManager         = new RewardManager(this);
+        parkourManager        = new ParkourManager(this);
+        duelManager           = new DuelManager(this);
+        leaderboardManager    = new LeaderboardManager(this);
         leaderboardManager.startRefreshTask();
 
+        dailyChallengeManager = new DailyChallengeManager(this);
+        dailyChallengeManager.start();
+
+        spectatorManager = new SpectatorManager(this);
+        spectatorManager.start();
+
         parkourMenu = new ParkourMenu(this);
-        themeMenu = new ThemeMenu(this);
+        themeMenu   = new ThemeMenu(this);
 
         var pm = getServer().getPluginManager();
         pm.registerEvents(new ParkourListener(this), this);
@@ -70,10 +86,14 @@ public class FirstParkour extends JavaPlugin {
 
     public static FirstParkour getInstance() { return instance; }
 
-    public DatabaseManager getDatabaseManager() { return databaseManager; }
-    public ParkourManager getParkourManager() { return parkourManager; }
-    public DuelManager getDuelManager() { return duelManager; }
-    public LeaderboardManager getLeaderboardManager() { return leaderboardManager; }
-    public ParkourMenu getParkourMenu() { return parkourMenu; }
-    public ThemeMenu getThemeMenu() { return themeMenu; }
+    public DatabaseManager       getDatabaseManager()       { return databaseManager; }
+    public ParkourManager        getParkourManager()        { return parkourManager; }
+    public DuelManager           getDuelManager()           { return duelManager; }
+    public LeaderboardManager    getLeaderboardManager()    { return leaderboardManager; }
+    public SoundManager          getSoundManager()          { return soundManager; }
+    public RewardManager         getRewardManager()         { return rewardManager; }
+    public DailyChallengeManager getDailyChallengeManager() { return dailyChallengeManager; }
+    public SpectatorManager      getSpectatorManager()      { return spectatorManager; }
+    public ParkourMenu           getParkourMenu()           { return parkourMenu; }
+    public ThemeMenu             getThemeMenu()             { return themeMenu; }
 }

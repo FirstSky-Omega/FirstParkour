@@ -1,5 +1,6 @@
 package fr.firstsky.firstparkour.util;
 
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.plugin.Plugin;
@@ -18,6 +19,10 @@ public final class FoliaUtil {
 
     public static void runAsyncDelayed(Plugin plugin, Runnable task, long delayMs) {
         plugin.getServer().getAsyncScheduler().runDelayed(plugin, t -> task.run(), delayMs, TimeUnit.MILLISECONDS);
+    }
+
+    public static ScheduledTask runAsyncDelayedCancellable(Plugin plugin, Runnable task, long delayMs) {
+        return plugin.getServer().getAsyncScheduler().runDelayed(plugin, t -> task.run(), delayMs, TimeUnit.MILLISECONDS);
     }
 
     public static void runAsyncRepeating(Plugin plugin, Runnable task, long initialDelayMs, long periodMs) {

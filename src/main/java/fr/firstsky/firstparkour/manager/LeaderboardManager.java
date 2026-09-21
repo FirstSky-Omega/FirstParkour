@@ -70,6 +70,11 @@ public class LeaderboardManager {
         return -1;
     }
 
+    public List<PlayerData> getGlobalTop(int limit) {
+        List<PlayerData> top = globalCache;
+        return Collections.unmodifiableList(top.size() <= limit ? top : top.subList(0, limit));
+    }
+
     /** Force un refresh immédiat en async */
     public void forceRefresh() {
         FoliaUtil.runAsync(plugin, this::refreshAll);

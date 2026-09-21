@@ -4,10 +4,12 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import fr.firstsky.firstparkour.FirstParkour;
 import fr.firstsky.firstparkour.model.BlockTheme;
+import fr.firstsky.firstparkour.model.DailyEntry;
 import fr.firstsky.firstparkour.model.Difficulty;
 import fr.firstsky.firstparkour.model.PlayerData;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -54,6 +56,16 @@ public class DatabaseManager {
                     total_jumps BIGINT DEFAULT 0,
                     theme VARCHAR(32) DEFAULT 'default',
                     last_played TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            """);
+            s.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS firstparkour_daily (
+                    uuid VARCHAR(36) NOT NULL,
+                    name VARCHAR(16) NOT NULL,
+                    score INT NOT NULL DEFAULT 0,
+                    day DATE NOT NULL,
+                    difficulty VARCHAR(16) NOT NULL,
+                    PRIMARY KEY (uuid, day, difficulty)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             """);
         } catch (SQLException e) {
@@ -183,6 +195,46 @@ public class DatabaseManager {
             plugin.getLogger().log(Level.SEVERE, "Erreur classement " + difficulty, e);
         }
         return list;
+    }
+
+    public List<DailyEntry> getDailyLeaderboard(LocalDate date, int limit) {
+        List<DailyEntry> list = new ArrayList<>();
+        try (Connection c = dataSource.getConnection();
+             PreparedStatement ps = c.prepareStatement(
+                     "SELECT uuid, name, score FROM firstparkour_daily WHERE day = ? ORDER BY score DESC LIMIT ?")) {
+            ps.setDate(1, java.sql.Date.valueOf(date));
+            ps.setInt(2, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new DailyEntry(UUID.fromString(rs.getString("uuid")),
+                            rs.getString("name"), rs.getInt("score")));
+                }
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Erreur classement daily", e);
+        }
+        return list;
+    }
+
+    public void saveDailyScore(UUID uuid, String name, int score, LocalDate date, Difficulty difficulty) {
+        String sql = """
+            INSERT INTO firstparkour_daily (uuid, name, score, day, difficulty)
+            VALUES (?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+                name = VALUES(name),
+                score = GREATEST(score, VALUES(score))
+        """;
+        try (Connection c = dataSource.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, uuid.toString());
+            ps.setString(2, name);
+            ps.setInt(3, score);
+            ps.setDate(4, java.sql.Date.valueOf(date));
+            ps.setString(5, difficulty.getKey());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Erreur sauvegarde daily score " + uuid, e);
+        }
     }
 
     public void close() {

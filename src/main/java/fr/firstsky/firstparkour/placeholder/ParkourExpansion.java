@@ -131,6 +131,31 @@ public class ParkourExpansion extends PlaceholderExpansion {
             return field.equals("name") ? entry.getName() : String.valueOf(entry.getBestScore(diff));
         }
 
+        // Défi quotidien
+        if (params.equals("daily_rank")) {
+            int rank = plugin.getDailyChallengeManager().getDailyRank(player.getUniqueId());
+            return rank == -1 ? "—" : String.valueOf(rank);
+        }
+        if (params.equals("daily_score")) {
+            return String.valueOf(plugin.getDailyChallengeManager().getDailyScore(player.getUniqueId()));
+        }
+        if (params.equals("daily_difficulty")) {
+            var d = plugin.getDailyChallengeManager().getTodayDifficulty();
+            return plugin.getConfig().getString("difficulties." + d.getKey() + ".display-name", d.getKey());
+        }
+        // top du défi : daily_top_1_name / daily_top_1_score
+        if (params.startsWith("daily_top_")) {
+            String[] parts = params.split("_");
+            if (parts.length < 4) return "";
+            int rank;
+            try { rank = Integer.parseInt(parts[2]); } catch (NumberFormatException e) { return ""; }
+            String field = parts[3];
+            var top = plugin.getDailyChallengeManager().getDailyTop();
+            if (rank < 1 || rank > top.size()) return field.equals("name") ? "—" : "0";
+            var entry = top.get(rank - 1);
+            return field.equals("name") ? entry.name() : String.valueOf(entry.score());
+        }
+
         return null;
     }
 }

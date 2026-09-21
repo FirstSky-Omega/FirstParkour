@@ -149,6 +149,17 @@ public class ParkourManager {
             FoliaUtil.runAtLocation(plugin, toRemove, () -> toRemove.getBlock().setType(Material.AIR));
         }
 
+        // Sons & particules
+        plugin.getSoundManager().playLand(player);
+        if (newRecord) plugin.getSoundManager().playRecord(player);
+
+        // Récompenses palier
+        plugin.getRewardManager().checkMilestone(player, session.getScore());
+
+        // Défi quotidien
+        plugin.getDailyChallengeManager().recordIfBetter(
+                player.getUniqueId(), player.getName(), session.getScore(), session.getDifficulty());
+
         if (plugin.getConfig().getBoolean("parkour.action-bar", true)) {
             String duelPart = buildDuelPart(player, session);
             String msg = plugin.getConfig().getString("messages.score-actionbar",
@@ -235,6 +246,7 @@ public class ParkourManager {
             int score = session.getScore();
             boolean inDuel = plugin.getDuelManager().isInDuel(player);
 
+            plugin.getSoundManager().playFall(player);
             stopSession(player, false);
 
             if (inDuel) {
@@ -322,6 +334,60 @@ public class ParkourManager {
         return " &8| &c⚔ " + opponent.getName() + ": &e" + opScore;
     }
 
+    /** Sauvegarde les données sans stopper la session (pour déconnexion en duel). */
+    public void saveDataOnly(Player player) {
+        PlayerData data = playerDataCache.get(player.getUniqueId());
+        if (data != null) {
+            FoliaUtil.runAsync(plugin, () -> plugin.getDatabaseManager().savePlayer(data));
+        }
+    }
+
+    /** Restaure la session après reconnexion en duel. */
+    public void restoreSessionForDuel(Player player, Difficulty difficulty, int savedScore) {
+        PlayerData data = playerDataCache.computeIfAbsent(player.getUniqueId(),
+                id -> plugin.getDatabaseManager().loadPlayer(id, player.getName()));
+
+        if (plugin.getConfig().getBoolean("parkour.force-adventure", true)) {
+            previousGameModes.put(player.getUniqueId(), player.getGameMode());
+            FoliaUtil.runForEntity(plugin, player, () -> player.setGameMode(GameMode.ADVENTURE));
+        }
+
+        Location parkourSpawn = getParkourSpawn(player);
+        if (parkourSpawn != null) {
+            savedLocations.put(player.getUniqueId(), player.getLocation().clone());
+            FoliaUtil.teleport(plugin, player, parkourSpawn,
+                    () -> initRestoredSession(player, difficulty, data, savedScore));
+        } else {
+            initRestoredSession(player, difficulty, data, savedScore);
+        }
+    }
+
+    private void initRestoredSession(Player player, Difficulty difficulty, PlayerData data, int savedScore) {
+        int personalBest = data.getBestScore(difficulty);
+        int historySize  = plugin.getConfig().getInt("parkour.history-size", 12);
+
+        ParkourSession session = new ParkourSession(player.getUniqueId(), difficulty, personalBest, historySize);
+        session.setScore(savedScore);
+        float yaw = player.getLocation().getYaw();
+        session.setCurrentAngle(Math.toRadians(yaw));
+        session.setTheme(data.getTheme());
+
+        Location startLoc = player.getLocation().getBlock().getLocation();
+        session.addBlock(startLoc);
+        session.setLastLandedBlock(startLoc);
+
+        sessions.put(player.getUniqueId(), session);
+
+        int blocksAhead = plugin.getConfig().getInt("parkour.blocks-ahead", 3);
+        for (int i = 0; i < blocksAhead; i++) placeNextBlock(session);
+
+        String prefix = plugin.getConfig().getString("messages.prefix", "");
+        String msg = prefix + plugin.getConfig().getString("messages.duel-reconnect",
+                "&aReconnecté ! Score restauré: &6{score}").replace("{score}", String.valueOf(savedScore));
+        FoliaUtil.runForEntity(plugin, player, () -> MessageUtil.send(player, msg));
+    }
+
     public Collection<ParkourSession> getAllSessions() { return sessions.values(); }
     public PlayerData getPlayerData(UUID uuid) { return playerDataCache.get(uuid); }
+    public ParkourSession getSessionByUuid(UUID uuid) { return sessions.get(uuid); }
 }
