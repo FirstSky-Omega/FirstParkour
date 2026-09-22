@@ -30,6 +30,10 @@ import org.jetbrains.annotations.Nullable;
  * %firstparkour_top_easy_1_name%            → nom du 1er du classement facile
  * %firstparkour_top_easy_1_score%           → score du 1er du classement facile
  * (easy/medium/hard, rang 1-10)
+ *
+ * %firstparkour_top_global_1_name%          → nom du 1er du classement global (toutes difficultés)
+ * %firstparkour_top_global_1_score%         → score du 1er du classement global
+ * (rang 1-10)
  */
 public class ParkourExpansion extends PlaceholderExpansion {
 
@@ -112,6 +116,20 @@ public class ParkourExpansion extends PlaceholderExpansion {
             if (diff == null) return "—";
             int rank = plugin.getLeaderboardManager().getRank(player.getUniqueId(), diff);
             return rank == -1 ? "—" : String.valueOf(rank);
+        }
+
+        // Classement global all-time: top_global_<rank>_name|score
+        if (params.startsWith("top_global_")) {
+            String[] parts = params.split("_");
+            if (parts.length < 4) return "";
+            int rank;
+            try { rank = Integer.parseInt(parts[2]); } catch (NumberFormatException e) { return ""; }
+            String field = parts[3];
+            var top = plugin.getLeaderboardManager().getGlobalTop(10);
+            if (rank < 1 || rank > top.size()) return field.equals("name") ? "—" : "0";
+            var entry = top.get(rank - 1);
+            int best = Math.max(entry.getBestScoreEasy(), Math.max(entry.getBestScoreMedium(), entry.getBestScoreHard()));
+            return field.equals("name") ? entry.getName() : String.valueOf(best);
         }
 
         // Classement: top_<difficulty>_<rank>_name|score
