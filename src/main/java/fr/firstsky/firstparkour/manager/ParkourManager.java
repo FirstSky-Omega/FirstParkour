@@ -114,7 +114,7 @@ public class ParkourManager {
         }
     }
 
-    /** Initialise la session une fois le joueur positionné au bon endroit. */
+    /** Initialise la session une fois le joueur positionné dans le monde parkour. */
     private void initSession(Player player, Difficulty difficulty, PlayerData data) {
         int personalBest = data.getBestScore(difficulty);
         int historySize  = plugin.getConfig().getInt("parkour.history-size", 12);
@@ -122,13 +122,33 @@ public class ParkourManager {
         ParkourSession session = new ParkourSession(
                 player.getUniqueId(), difficulty, personalBest, historySize);
 
-        float yaw = player.getLocation().getYaw();
-        session.setCurrentAngle(Math.toRadians(yaw));
+        double angle = Math.toRadians(player.getLocation().getYaw());
+        session.setCurrentAngle(angle);
         session.setTheme(data.getTheme());
 
-        // Bloc sous les pieds du joueur — c'est là qu'il doit se tenir
+        String diffName = plugin.getConfig().getString(
+                "difficulties." + difficulty.getKey() + ".display-name", difficulty.getKey());
+        String msg = plugin.getConfig().getString("messages.prefix", "")
+                + plugin.getConfig().getString("messages.start", "&aDémarré !")
+                .replace("{difficulty}", MessageUtil.color(diffName));
+
+        if (generator.isInLobbyZone(player.getLocation())) {
+            // Le spawn est dans la zone lobby : TP le joueur au bord avant de commencer
+            Location outsideBlock = generator.getStartOutsideLobby(player.getLocation(), angle);
+            Location playerPos = outsideBlock.clone().add(0.5, 1, 0.5);
+            player.teleportAsync(playerPos).thenAccept(ok -> {
+                if (ok) player.getScheduler().execute(plugin,
+                        () -> finalizeSessionInit(player, session, msg), null, 1L);
+            });
+        } else {
+            finalizeSessionInit(player, session, msg);
+        }
+    }
+
+    /** Place le premier bloc, génère les suivants, enregistre la session et envoie le message. */
+    private void finalizeSessionInit(Player player, ParkourSession session, String startMsg) {
         Location startLoc = player.getLocation().subtract(0, 1, 0).getBlock().getLocation();
-        Material startMat = generator.getRandomMaterial(difficulty, session.getTheme());
+        Material startMat = generator.getRandomMaterial(session.getDifficulty(), session.getTheme());
         FoliaUtil.runAtLocation(plugin, startLoc, () -> startLoc.getBlock().setType(startMat));
         session.addBlock(startLoc);
         session.markScored(startLoc);
@@ -139,12 +159,7 @@ public class ParkourManager {
         int blocksAhead = plugin.getConfig().getInt("parkour.blocks-ahead", 3);
         for (int i = 0; i < blocksAhead; i++) placeNextBlock(session);
 
-        String diffName = plugin.getConfig().getString(
-                "difficulties." + difficulty.getKey() + ".display-name", difficulty.getKey());
-        String msg = plugin.getConfig().getString("messages.prefix", "")
-                + plugin.getConfig().getString("messages.start", "&aDémarré !")
-                .replace("{difficulty}", MessageUtil.color(diffName));
-        MessageUtil.send(player, msg);
+        MessageUtil.send(player, startMsg);
     }
 
     // ──────────────────────────────────────────────
@@ -439,26 +454,24 @@ public class ParkourManager {
 
         ParkourSession session = new ParkourSession(player.getUniqueId(), difficulty, personalBest, historySize);
         session.setScore(savedScore);
-        float yaw = player.getLocation().getYaw();
-        session.setCurrentAngle(Math.toRadians(yaw));
+        double angle = Math.toRadians(player.getLocation().getYaw());
+        session.setCurrentAngle(angle);
         session.setTheme(data.getTheme());
-
-        Location startLoc = player.getLocation().subtract(0, 1, 0).getBlock().getLocation();
-        Material startMat = generator.getRandomMaterial(difficulty, session.getTheme());
-        FoliaUtil.runAtLocation(plugin, startLoc, () -> startLoc.getBlock().setType(startMat));
-        session.addBlock(startLoc);
-        session.markScored(startLoc);
-        session.setLastLandedBlock(startLoc);
-
-        sessions.put(player.getUniqueId(), session);
-
-        int blocksAhead = plugin.getConfig().getInt("parkour.blocks-ahead", 3);
-        for (int i = 0; i < blocksAhead; i++) placeNextBlock(session);
 
         String prefix = plugin.getConfig().getString("messages.prefix", "");
         String msg = prefix + plugin.getConfig().getString("messages.duel-reconnect",
                 "&aReconnecté ! Score restauré: &6{score}").replace("{score}", String.valueOf(savedScore));
-        FoliaUtil.runForEntity(plugin, player, () -> MessageUtil.send(player, msg));
+
+        if (generator.isInLobbyZone(player.getLocation())) {
+            Location outsideBlock = generator.getStartOutsideLobby(player.getLocation(), angle);
+            Location playerPos = outsideBlock.clone().add(0.5, 1, 0.5);
+            player.teleportAsync(playerPos).thenAccept(ok -> {
+                if (ok) player.getScheduler().execute(plugin,
+                        () -> finalizeSessionInit(player, session, msg), null, 1L);
+            });
+        } else {
+            finalizeSessionInit(player, session, msg);
+        }
     }
 
     public Collection<ParkourSession> getAllSessions() { return sessions.values(); }

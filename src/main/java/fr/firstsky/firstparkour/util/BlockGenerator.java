@@ -75,6 +75,27 @@ public class BlockGenerator {
         }
     }
 
+    public boolean isInLobbyZone(Location loc) {
+        return lobbyZone.contains(loc.getBlockX(), loc.getBlockZ());
+    }
+
+    /**
+     * Retourne une location de bloc (Y-1) juste à l'extérieur de la zone lobby.
+     * La direction choisie est celle qui va du centre de la zone vers la position du joueur ;
+     * si le joueur est exactement au centre, on utilise preferredAngle.
+     */
+    public Location getStartOutsideLobby(Location origin, double preferredAngle) {
+        double dx = origin.getBlockX() - lobbyZone.cx();
+        double dz = origin.getBlockZ() - lobbyZone.cz();
+        double angle = (Math.abs(dx) < 0.5 && Math.abs(dz) < 0.5)
+                ? preferredAngle
+                : Math.atan2(dx, dz);
+        double dist = lobbyZone.half() + 5.0;
+        int x = lobbyZone.cx() + (int) Math.round(Math.sin(angle) * dist);
+        int z = lobbyZone.cz() + (int) Math.round(Math.cos(angle) * dist);
+        return new Location(origin.getWorld(), x, origin.getBlockY() - 1, z);
+    }
+
     public Location generateNext(ParkourSession session) {
         Location last = session.getLastBlock();
         if (last == null) return null;
