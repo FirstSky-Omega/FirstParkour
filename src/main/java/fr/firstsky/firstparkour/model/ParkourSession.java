@@ -18,6 +18,10 @@ public class ParkourSession {
     private final Difficulty difficulty;
     private int score;
     private int personalBest;
+    /** PB au démarrage de la session — ne change pas. */
+    private final int initialPersonalBest;
+    /** Vrai dès que le score dépasse initialPersonalBest (annoncé une seule fois). */
+    private boolean hasBeatenRecord = false;
     private final Deque<Location> activeBlocks = new ArrayDeque<>();
     /** Index O(1) pour isParkourBlock — clé = "x,y,z" */
     private final Set<String> blockKeys = new HashSet<>();
@@ -42,6 +46,7 @@ public class ParkourSession {
         this.difficulty = difficulty;
         this.score = 0;
         this.personalBest = personalBest;
+        this.initialPersonalBest = personalBest;
         this.historySize = historySize;
         this.startTime = System.currentTimeMillis();
         this.active = true;
@@ -126,6 +131,21 @@ public class ParkourSession {
     private static String blockKey(Location loc) {
         return loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ();
     }
+
+    /**
+     * Retourne vrai la première fois que le score dépasse le PB initial.
+     * Appels suivants retournent faux (annonce une seule fois par session).
+     */
+    public boolean checkAndMarkRecordBeaten() {
+        if (!hasBeatenRecord && score > initialPersonalBest) {
+            hasBeatenRecord = true;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean hasBeatenRecord() { return hasBeatenRecord; }
+    public int getInitialPersonalBest() { return initialPersonalBest; }
 
     public UUID getPlayerUuid() { return playerUuid; }
     public Difficulty getDifficulty() { return difficulty; }

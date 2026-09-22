@@ -159,7 +159,8 @@ public class ParkourManager {
         PlayerData data = playerDataCache.get(player.getUniqueId());
         if (data != null) data.updateBestScore(session.getDifficulty(), session.getScore());
 
-        boolean newRecord = session.getScore() == session.getPersonalBest() && session.getScore() > 1;
+        // Nouveau record : annoncé une seule fois, au moment où le score dépasse le PB initial
+        boolean justBeatRecord = session.checkAndMarkRecordBeaten();
 
         placeNextBlock(session);
 
@@ -170,7 +171,7 @@ public class ParkourManager {
 
         // Sons & particules
         plugin.getSoundManager().playLand(player);
-        if (newRecord) plugin.getSoundManager().playRecord(player);
+        if (justBeatRecord) plugin.getSoundManager().playRecord(player);
 
         // Récompenses palier
         plugin.getRewardManager().checkMilestone(player, session.getScore());
@@ -189,7 +190,7 @@ public class ParkourManager {
             FoliaUtil.runForEntity(plugin, player, () -> MessageUtil.sendActionBar(player, msg));
         }
 
-        if (newRecord) {
+        if (justBeatRecord) {
             String msg = plugin.getConfig().getString("messages.prefix", "")
                     + plugin.getConfig().getString("messages.new-record", "&6RECORD!")
                     .replace("{score}", String.valueOf(session.getScore()));
@@ -277,21 +278,28 @@ public class ParkourManager {
 
         if (player.getLocation().getBlockY() < lowestBlockY - 5) {
             int score = session.getScore();
+            boolean isNewRecord = session.hasBeatenRecord();
             boolean inDuel = plugin.getDuelManager().isInDuel(player);
 
             plugin.getSoundManager().playFall(player);
+            if (isNewRecord) plugin.getSoundManager().playRecord(player);
             // Après une chute : renvoyer au spawn parkour (pas à l'île d'origine)
             stopSession(player, false, getParkourSpawnSilent());
 
             if (inDuel) {
                 plugin.getDuelManager().onDuelEnd(player, score);
             } else {
-                String msg = plugin.getConfig().getString("messages.prefix", "")
+                String fallMsg = plugin.getConfig().getString("messages.prefix", "")
                         + plugin.getConfig().getString("messages.fall", "&cTombé ! Score: &6{score}")
                         .replace("{score}", String.valueOf(score));
+                String subtitle = isNewRecord
+                        ? MessageUtil.color(plugin.getConfig()
+                                .getString("messages.new-record", "&6✦ NOUVEAU RECORD !")
+                                .replace("{score}", String.valueOf(score)))
+                        : "&7Score: &6" + score;
                 FoliaUtil.runForEntity(plugin, player, () -> {
-                    MessageUtil.send(player, msg);
-                    MessageUtil.sendTitle(player, "&c✗", "&7Score: &6" + score, 5, 40, 10);
+                    MessageUtil.send(player, fallMsg);
+                    MessageUtil.sendTitle(player, "&c✗", subtitle, 5, 60, 15);
                 });
             }
         }
