@@ -94,7 +94,13 @@ public class ParkourManager {
             FoliaUtil.runForEntity(plugin, player, () -> player.setGameMode(GameMode.ADVENTURE));
         }
 
+        String configuredWorld = plugin.getConfig().getString("parkour.world", "");
         Location parkourSpawn = getParkourSpawn(player);
+
+        if (!configuredWorld.isBlank() && parkourSpawn == null) {
+            // Monde configuré mais introuvable — message déjà envoyé par getParkourSpawn
+            return;
+        }
 
         if (parkourSpawn != null) {
             // Sauvegarde la position d'origine AVANT la téléportation
@@ -103,7 +109,7 @@ public class ParkourManager {
             FoliaUtil.teleport(plugin, player, parkourSpawn,
                     () -> initSession(player, difficulty, data));
         } else {
-            // Pas de monde configuré : démarrage sur place
+            // Aucun monde configuré : démarrage sur place
             initSession(player, difficulty, data);
         }
     }
@@ -122,6 +128,7 @@ public class ParkourManager {
 
         Location startLoc = player.getLocation().getBlock().getLocation();
         session.addBlock(startLoc);
+        session.markScored(startLoc); // le bloc de départ ne donne pas de score
         session.setLastLandedBlock(startLoc);
 
         sessions.put(player.getUniqueId(), session);
@@ -142,6 +149,7 @@ public class ParkourManager {
     // ──────────────────────────────────────────────
 
     public void onPlayerLand(Player player, ParkourSession session, Location landedOn) {
+        session.markScored(landedOn);
         session.setLastLandedBlock(landedOn);
         session.incrementScore();
 
@@ -397,6 +405,7 @@ public class ParkourManager {
 
         Location startLoc = player.getLocation().getBlock().getLocation();
         session.addBlock(startLoc);
+        session.markScored(startLoc);
         session.setLastLandedBlock(startLoc);
 
         sessions.put(player.getUniqueId(), session);

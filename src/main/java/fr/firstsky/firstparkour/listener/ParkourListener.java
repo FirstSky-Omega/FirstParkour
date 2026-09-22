@@ -51,7 +51,7 @@ public class ParkourListener implements Listener {
             Block blockBelow = player.getLocation().subtract(0, 0.2, 0).getBlock();
             Location belowLoc = blockBelow.getLocation();
 
-            if (session.isParkourBlock(belowLoc) && !session.isLastLandedBlock(belowLoc)) {
+            if (session.isParkourBlock(belowLoc) && session.isNewBlock(belowLoc) && !session.isLastLandedBlock(belowLoc)) {
                 plugin.getParkourManager().onPlayerLand(player, session, belowLoc);
             }
         }

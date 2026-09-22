@@ -5,8 +5,10 @@ import org.bukkit.Location;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -19,6 +21,12 @@ public class ParkourSession {
     private final Deque<Location> activeBlocks = new ArrayDeque<>();
     /** Index O(1) pour isParkourBlock — clé = "x,y,z" */
     private final Set<String> blockKeys = new HashSet<>();
+    /** Index de génération de chaque bloc — pour bloquer les sauts en arrière */
+    private final Map<String, Integer> blockIndices = new HashMap<>();
+    /** Prochain index à attribuer lors de addBlock() */
+    private int nextBlockIndex = 0;
+    /** Index du dernier bloc qui a accordé un score (−1 = aucun) */
+    private int lastScoredIndex = -1;
     /** Y minimum des blocs actifs — mis à jour dans addBlock / pollOldestIfNeeded */
     private int minBlockY = Integer.MAX_VALUE;
 
@@ -43,7 +51,9 @@ public class ParkourSession {
     public void addBlock(Location loc) {
         Location c = loc.clone();
         activeBlocks.addLast(c);
-        blockKeys.add(blockKey(c));
+        String key = blockKey(c);
+        blockKeys.add(key);
+        blockIndices.put(key, nextBlockIndex++);
         if (c.getBlockY() < minBlockY) minBlockY = c.getBlockY();
     }
 
@@ -51,7 +61,9 @@ public class ParkourSession {
     public Location pollOldestIfNeeded() {
         if (activeBlocks.size() > historySize) {
             Location removed = activeBlocks.pollFirst();
-            blockKeys.remove(blockKey(removed));
+            String key = blockKey(removed);
+            blockKeys.remove(key);
+            blockIndices.remove(key);
             if (removed.getBlockY() == minBlockY) {
                 minBlockY = activeBlocks.stream()
                         .mapToInt(Location::getBlockY)
@@ -65,6 +77,21 @@ public class ParkourSession {
     /** O(1) grâce au HashSet. */
     public boolean isParkourBlock(Location loc) {
         return blockKeys.contains(blockKey(loc));
+    }
+
+    /**
+     * Vrai si ce bloc est en avant du dernier bloc scoré (jamais accordé de score).
+     * Empêche de scorer en sautant en arrière.
+     */
+    public boolean isNewBlock(Location loc) {
+        Integer idx = blockIndices.get(blockKey(loc));
+        return idx != null && idx > lastScoredIndex;
+    }
+
+    /** Marque ce bloc comme scoré. Appeler juste avant d'incrémenter le score. */
+    public void markScored(Location loc) {
+        Integer idx = blockIndices.get(blockKey(loc));
+        if (idx != null) lastScoredIndex = idx;
     }
 
     public boolean isLastLandedBlock(Location loc) {
