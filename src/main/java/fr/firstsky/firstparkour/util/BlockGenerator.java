@@ -18,6 +18,13 @@ public class BlockGenerator {
 
     private record DifficultyConfig(int minDist, int maxDist, int minH, int maxH, double spread) {}
 
+    /** Zone lobby à éviter lors de la génération. */
+    private record LobbyZone(boolean enabled, int cx, int cz, int half) {
+        boolean contains(int x, int z) {
+            return enabled && Math.abs(x - cx) <= half && Math.abs(z - cz) <= half;
+        }
+    }
+
     private final FirstParkour plugin;
     private final Random random = new Random();
 
@@ -27,6 +34,8 @@ public class BlockGenerator {
     private final Map<Difficulty, Material[]> diffMaterials = new EnumMap<>(Difficulty.class);
     /** Matériaux pré-parsés par thème */
     private final Map<BlockTheme, Material[]> themeMaterials = new EnumMap<>(BlockTheme.class);
+    /** Zone lobby à ne pas envahir */
+    private LobbyZone lobbyZone = new LobbyZone(false, 0, 0, 0);
 
     public BlockGenerator(FirstParkour plugin) {
         this.plugin = plugin;
@@ -49,6 +58,12 @@ public class BlockGenerator {
                     sec.getDouble("angle-spread", 30.0)));
             diffMaterials.put(d, parseMaterials(sec.getStringList("blocks")));
         }
+
+        boolean zoneEnabled = plugin.getConfig().getBoolean("parkour.lobby-zone.enabled", false);
+        int cx   = plugin.getConfig().getInt("parkour.lobby-zone.center-x", 0);
+        int cz   = plugin.getConfig().getInt("parkour.lobby-zone.center-z", 0);
+        int half = plugin.getConfig().getInt("parkour.lobby-zone.half-size", 100);
+        lobbyZone = new LobbyZone(zoneEnabled, cx, cz, half);
 
         for (BlockTheme t : BlockTheme.values()) {
             if (t == BlockTheme.DEFAULT) continue;
@@ -77,6 +92,18 @@ public class BlockGenerator {
         int dz = (int) Math.round(Math.cos(newAngle) * distance);
         if (Math.abs(dx) + Math.abs(dz) < 2) {
             if (dx == 0 && dz == 0) dz = distance;
+        }
+
+        // Si le bloc candidat tombe dans la zone lobby, on réoriente loin du centre
+        if (lobbyZone.contains(last.getBlockX() + dx, last.getBlockZ() + dz)) {
+            double awayAngle = Math.atan2(
+                    last.getBlockX() - lobbyZone.cx(),
+                    last.getBlockZ() - lobbyZone.cz());
+            newAngle = awayAngle + (random.nextDouble() * 2.0 - 1.0) * Math.toRadians(cfg.spread() * 0.5);
+            dx = (int) Math.round(Math.sin(newAngle) * distance);
+            dz = (int) Math.round(Math.cos(newAngle) * distance);
+            if (Math.abs(dx) + Math.abs(dz) < 2) dz = distance;
+            session.setCurrentAngle(newAngle);
         }
 
         int dy = cfg.minH() + random.nextInt(cfg.maxH() - cfg.minH() + 1);

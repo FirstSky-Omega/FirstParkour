@@ -34,6 +34,14 @@ parkour:
   # Fréquence d'actualisation du classement (en secondes)
   leaderboard-refresh: 60
 
+  # Zone lobby à exclure de la génération de blocs (carré centré sur cx,cz)
+  # half-size = demi-côté : 100 = carré de 200x200
+  lobby-zone:
+    enabled: true
+    center-x: 0
+    center-z: 0
+    half-size: 100
+
 difficulties:
   easy:
     display-name: '&aFacile'
