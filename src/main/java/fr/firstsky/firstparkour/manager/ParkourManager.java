@@ -126,9 +126,12 @@ public class ParkourManager {
         session.setCurrentAngle(Math.toRadians(yaw));
         session.setTheme(data.getTheme());
 
-        Location startLoc = player.getLocation().getBlock().getLocation();
+        // Bloc sous les pieds du joueur — c'est là qu'il doit se tenir
+        Location startLoc = player.getLocation().subtract(0, 1, 0).getBlock().getLocation();
+        Material startMat = generator.getRandomMaterial(difficulty, session.getTheme());
+        FoliaUtil.runAtLocation(plugin, startLoc, () -> startLoc.getBlock().setType(startMat));
         session.addBlock(startLoc);
-        session.markScored(startLoc); // le bloc de départ ne donne pas de score
+        session.markScored(startLoc);
         session.setLastLandedBlock(startLoc);
 
         sessions.put(player.getUniqueId(), session);
@@ -199,6 +202,14 @@ public class ParkourManager {
     // ──────────────────────────────────────────────
 
     public void stopSession(Player player, boolean sendMessage) {
+        stopSession(player, sendMessage, null);
+    }
+
+    /**
+     * Stoppe la session. Si destination est non null, TP le joueur là-bas
+     * au lieu de le renvoyer à sa position d'origine (utile après une chute).
+     */
+    public void stopSession(Player player, boolean sendMessage, Location destination) {
         ParkourSession session = sessions.remove(player.getUniqueId());
         if (session == null) return;
         session.setActive(false);
@@ -222,10 +233,11 @@ public class ParkourManager {
             FoliaUtil.runForEntity(plugin, player, () -> player.setGameMode(prev));
         }
 
-        // Téléporte le joueur à sa position d'origine
+        // Téléporte vers la destination (spawn parkour si chute, origine sinon)
         Location origin = savedLocations.remove(player.getUniqueId());
-        if (origin != null) {
-            FoliaUtil.teleport(plugin, player, origin, null);
+        Location dest = destination != null ? destination : origin;
+        if (dest != null) {
+            FoliaUtil.teleport(plugin, player, dest, null);
         }
 
         // Sauvegarde le score
@@ -268,7 +280,8 @@ public class ParkourManager {
             boolean inDuel = plugin.getDuelManager().isInDuel(player);
 
             plugin.getSoundManager().playFall(player);
-            stopSession(player, false);
+            // Après une chute : renvoyer au spawn parkour (pas à l'île d'origine)
+            stopSession(player, false, getParkourSpawnSilent());
 
             if (inDuel) {
                 plugin.getDuelManager().onDuelEnd(player, score);
@@ -319,8 +332,10 @@ public class ParkourManager {
                             "&cMonde &e{world} &cintrouvable !")
                     .replace("{world}", worldName);
             MessageUtil.send(player, msg);
+            String loaded = plugin.getServer().getWorlds().stream()
+                    .map(World::getName).reduce((a, b) -> a + ", " + b).orElse("aucun");
             plugin.getLogger().log(Level.WARNING,
-                    "Monde de parkour '" + worldName + "' introuvable. Démarrage sur place.");
+                    "Monde '" + worldName + "' introuvable. Mondes charges: " + loaded);
             return null;
         }
 
@@ -330,6 +345,20 @@ public class ParkourManager {
         float  yaw   = (float) plugin.getConfig().getDouble("parkour.spawn.yaw", 0);
         float  pitch = (float) plugin.getConfig().getDouble("parkour.spawn.pitch", 0);
 
+        return new Location(world, x, y, z, yaw, pitch);
+    }
+
+    /** Retourne le spawn du monde parkour configuré sans envoyer de message, ou null. */
+    private Location getParkourSpawnSilent() {
+        String worldName = plugin.getConfig().getString("parkour.world", "");
+        if (worldName == null || worldName.isBlank()) return null;
+        World world = plugin.getServer().getWorld(worldName);
+        if (world == null) return null;
+        double x     = plugin.getConfig().getDouble("parkour.spawn.x", 0);
+        double y     = plugin.getConfig().getDouble("parkour.spawn.y", 100);
+        double z     = plugin.getConfig().getDouble("parkour.spawn.z", 0);
+        float  yaw   = (float) plugin.getConfig().getDouble("parkour.spawn.yaw", 0);
+        float  pitch = (float) plugin.getConfig().getDouble("parkour.spawn.pitch", 0);
         return new Location(world, x, y, z, yaw, pitch);
     }
 
@@ -403,7 +432,9 @@ public class ParkourManager {
         session.setCurrentAngle(Math.toRadians(yaw));
         session.setTheme(data.getTheme());
 
-        Location startLoc = player.getLocation().getBlock().getLocation();
+        Location startLoc = player.getLocation().subtract(0, 1, 0).getBlock().getLocation();
+        Material startMat = generator.getRandomMaterial(difficulty, session.getTheme());
+        FoliaUtil.runAtLocation(plugin, startLoc, () -> startLoc.getBlock().setType(startMat));
         session.addBlock(startLoc);
         session.markScored(startLoc);
         session.setLastLandedBlock(startLoc);
