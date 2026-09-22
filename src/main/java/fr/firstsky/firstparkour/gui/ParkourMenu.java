@@ -65,45 +65,46 @@ public class ParkourMenu implements Listener {
         // ── Thèmes ────────────────────────────────────────────────────────────
         String themeNexo = nid("themes");
         ItemStack themeBtn = NexoUtil.build(themeNexo, Material.PAINTING,
-                "&bThèmes de blocs",
-                List.of("", "&7Personnalisez l'apparence", "&7de vos blocs de parkour.", "", "&eCliquez pour ouvrir"));
+                "&#00E5FF✦ Thèmes de blocs",
+                List.of("", "&#96A6B8Personnalisez l'apparence", "&#96A6B8de vos blocs de parkour.", "", "&#FFD700▶ Cliquez pour ouvrir"));
         inv.setItem(slotThemes, themeBtn);
 
         // ── Stats ────────────────────────────────────────────────────────────
         List<String> statsLore;
         if (data == null) {
-            statsLore = List.of("&7Chargement...");
+            statsLore = List.of("&#96A6B8Chargement...");
         } else {
             statsLore = List.of(
                     "",
-                    "&7Facile:    &a" + data.getBestScoreEasy() + " blocs",
-                    "&7Normal:    &e" + data.getBestScoreMedium() + " blocs",
-                    "&7Difficile: &c" + data.getBestScoreHard() + " blocs",
+                    "&#A8FF78Facile    &7: &a" + data.getBestScoreEasy() + " blocs",
+                    "&#FFD700Normal    &7: &e" + data.getBestScoreMedium() + " blocs",
+                    "&#FF6B81Difficile &7: &c" + data.getBestScoreHard() + " blocs",
                     "",
-                    "&7Total sauts: &6" + data.getTotalJumps(),
-                    "&7Thème actif: &b" + data.getTheme().getKey()
+                    "&#07B9FBTotal sauts &7: &f" + data.getTotalJumps(),
+                    "&#00E5FFThème actif &7: &f" + data.getTheme().getKey()
             );
         }
         inv.setItem(slotStats,
-                NexoUtil.build(nid("stats"), Material.BOOK, "&6Vos Statistiques", statsLore));
+                NexoUtil.build(nid("stats"), Material.BOOK, "&#FFD700✦ Vos Statistiques", statsLore));
 
         // ── Classement global ─────────────────────────────────────────────────
         var globalTop = plugin.getLeaderboardManager().getGlobalTop(3);
         List<String> globalLore = new ArrayList<>();
         globalLore.add("");
         if (globalTop.isEmpty()) {
-            globalLore.add("&7Aucun score enregistré.");
+            globalLore.add("&#96A6B8Aucun score enregistré.");
         } else {
+            String[] medals = {"&#FFD700#1", "&#C0C0C0#2", "&#CD7F32#3"};
             for (int i = 0; i < globalTop.size(); i++) {
                 var pd = globalTop.get(i);
                 int best = Math.max(pd.getBestScoreEasy(), Math.max(pd.getBestScoreMedium(), pd.getBestScoreHard()));
-                globalLore.add("&7#" + (i + 1) + " &e" + pd.getName() + " &7- &6" + best + " blocs");
+                globalLore.add(medals[i] + " &f" + pd.getName() + " &#7A8C99— &#FFA500" + best + " blocs");
             }
         }
         globalLore.add("");
-        globalLore.add("&eCliquez pour le classement complet");
+        globalLore.add("&#FFD700▶ Cliquez pour le classement complet");
         inv.setItem(slotGlobal,
-                NexoUtil.build(nid("global"), Material.NETHER_STAR, "&6Classement Global", globalLore));
+                NexoUtil.build(nid("global"), Material.NETHER_STAR, "&#FFD700★ Classement Global", globalLore));
 
         // ── Défi quotidien ────────────────────────────────────────────────────
         var dcm = plugin.getDailyChallengeManager();
@@ -114,18 +115,18 @@ public class ParkourMenu implements Listener {
         int myDailyScore = dcm.getDailyScore(player.getUniqueId());
         List<String> dailyLore = new ArrayList<>();
         dailyLore.add("");
-        dailyLore.add("&7Mode du jour : " + MessageUtil.color(dailyDiffName));
+        dailyLore.add("&#96A6B8Mode du jour &7: " + MessageUtil.color(dailyDiffName));
         dailyLore.add(myDailyRank > 0
-                ? "&7Votre position : &e#" + myDailyRank + " &7(&6" + myDailyScore + " blocs&7)"
-                : "&7Vous n'avez pas encore participé.");
+                ? "&#96A6B8Votre position &7: &#FFD700#" + myDailyRank + " &7(&f" + myDailyScore + " blocs&7)"
+                : "&#96A6B8Tu n'as pas encore participé.");
         dailyLore.add("");
-        dailyLore.add("&eCliquez pour voir le classement");
+        dailyLore.add("&#FFD700▶ Cliquez pour voir le classement");
         inv.setItem(slotDaily,
-                NexoUtil.build(nid("daily"), Material.CLOCK, "&6Défi du Jour", dailyLore));
+                NexoUtil.build(nid("daily"), Material.CLOCK, "&#FFA500⏱ Défi du Jour", dailyLore));
 
         // ── Fermer ────────────────────────────────────────────────────────────
         inv.setItem(slotClose,
-                NexoUtil.build(nid("close"), Material.BARRIER, "&cFermer", List.of()));
+                NexoUtil.build(nid("close"), Material.BARRIER, "&#FF4757✖ Fermer", List.of()));
 
         player.openInventory(inv);
     }
@@ -141,7 +142,7 @@ public class ParkourMenu implements Listener {
         };
         int best = data != null ? data.getBestScore(difficulty) : 0;
         return NexoUtil.build(nexo, mat, name,
-                List.of("", "&7Cliquez pour &6choisir cette difficulté", "", "&7Votre record: &e" + best + " blocs"));
+                List.of("", "&#96A6B8Cliquez pour &#FFD700choisir cette difficulté", "", "&#96A6B8Votre record &7: &#FFD700" + best + " &#96A6B8blocs"));
     }
 
     @EventHandler
@@ -161,13 +162,16 @@ public class ParkourMenu implements Listener {
         else if (slot == slotGlobal) {
             // Affiche le classement global en chat
             String prefix = plugin.getConfig().getString("messages.prefix", "");
-            MessageUtil.send(player, prefix + "&8&m----&r &6Classement Global &8&m----");
+            MessageUtil.send(player, prefix + "&#FFD700★ &#FFC200Classement Global &#FFD700★");
             var top = plugin.getLeaderboardManager().getGlobalTop(10);
+            if (top.isEmpty()) {
+                MessageUtil.send(player, "  &#96A6B8Aucun score enregistré pour le moment.");
+            }
             for (int i = 0; i < top.size(); i++) {
                 var pd = top.get(i);
                 int best = Math.max(pd.getBestScoreEasy(), Math.max(pd.getBestScoreMedium(), pd.getBestScoreHard()));
                 MessageUtil.send(player, plugin.getConfig().getString("messages.top-line",
-                                "&7#{rank} &e{name} &7- &6{score} blocs")
+                                "  &#FFD700&l#{rank} &f{name} &#7A8C99— &#FFA500{score} &6blocs")
                         .replace("{rank}", String.valueOf(i + 1))
                         .replace("{name}", pd.getName())
                         .replace("{score}", String.valueOf(best)));

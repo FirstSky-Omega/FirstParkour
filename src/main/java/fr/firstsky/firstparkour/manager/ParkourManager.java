@@ -105,13 +105,25 @@ public class ParkourManager {
         if (parkourSpawn != null) {
             // Sauvegarde la position d'origine AVANT la téléportation
             savedLocations.put(player.getUniqueId(), player.getLocation().clone());
-            // Téléporte puis initialise
-            FoliaUtil.teleport(plugin, player, parkourSpawn,
+            // Si le spawn est dans la zone lobby, destination = bord extérieur de la zone
+            Location destination = resolveStartDestination(parkourSpawn, player.getLocation().getYaw());
+            FoliaUtil.teleport(plugin, player, destination,
                     () -> initSession(player, difficulty, data));
         } else {
             // Aucun monde configuré : démarrage sur place
             initSession(player, difficulty, data);
         }
+    }
+
+    /**
+     * Si la destination est dans la zone lobby, retourne un point hors de la zone.
+     * Sinon retourne la destination inchangée.
+     */
+    private Location resolveStartDestination(Location base, float playerYaw) {
+        if (!generator.isInLobbyZone(base)) return base;
+        double angle = Math.toRadians(playerYaw);
+        Location outsideBlock = generator.getStartOutsideLobby(base, angle);
+        return outsideBlock.clone().add(0.5, 1, 0.5);
     }
 
     /** Initialise la session une fois le joueur positionné dans le monde parkour. */
@@ -132,17 +144,7 @@ public class ParkourManager {
                 + plugin.getConfig().getString("messages.start", "&aDémarré !")
                 .replace("{difficulty}", MessageUtil.color(diffName));
 
-        if (generator.isInLobbyZone(player.getLocation())) {
-            // Le spawn est dans la zone lobby : TP le joueur au bord avant de commencer
-            Location outsideBlock = generator.getStartOutsideLobby(player.getLocation(), angle);
-            Location playerPos = outsideBlock.clone().add(0.5, 1, 0.5);
-            player.teleportAsync(playerPos).thenAccept(ok -> {
-                if (ok) player.getScheduler().execute(plugin,
-                        () -> finalizeSessionInit(player, session, msg), null, 1L);
-            });
-        } else {
-            finalizeSessionInit(player, session, msg);
-        }
+        finalizeSessionInit(player, session, msg);
     }
 
     /** Place le premier bloc, génère les suivants, enregistre la session et envoie le message. */
@@ -441,7 +443,8 @@ public class ParkourManager {
         Location parkourSpawn = getParkourSpawn(player);
         if (parkourSpawn != null) {
             savedLocations.put(player.getUniqueId(), player.getLocation().clone());
-            FoliaUtil.teleport(plugin, player, parkourSpawn,
+            Location destination = resolveStartDestination(parkourSpawn, player.getLocation().getYaw());
+            FoliaUtil.teleport(plugin, player, destination,
                     () -> initRestoredSession(player, difficulty, data, savedScore));
         } else {
             initRestoredSession(player, difficulty, data, savedScore);
@@ -462,16 +465,7 @@ public class ParkourManager {
         String msg = prefix + plugin.getConfig().getString("messages.duel-reconnect",
                 "&aReconnecté ! Score restauré: &6{score}").replace("{score}", String.valueOf(savedScore));
 
-        if (generator.isInLobbyZone(player.getLocation())) {
-            Location outsideBlock = generator.getStartOutsideLobby(player.getLocation(), angle);
-            Location playerPos = outsideBlock.clone().add(0.5, 1, 0.5);
-            player.teleportAsync(playerPos).thenAccept(ok -> {
-                if (ok) player.getScheduler().execute(plugin,
-                        () -> finalizeSessionInit(player, session, msg), null, 1L);
-            });
-        } else {
-            finalizeSessionInit(player, session, msg);
-        }
+        finalizeSessionInit(player, session, msg);
     }
 
     public Collection<ParkourSession> getAllSessions() { return sessions.values(); }
