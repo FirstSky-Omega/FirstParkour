@@ -39,21 +39,17 @@ public class ParkourListener implements Listener {
             return;
         }
 
-        boolean onGround = player.isOnGround();
-        boolean prevOnGround = wasOnGround.getOrDefault(uuid, true);
-        wasOnGround.put(uuid, onGround);
-
         // Détection de chute
         plugin.getParkourManager().checkFall(player);
 
-        // Détection d'atterrissage : transition false → true
-        if (!prevOnGround && onGround) {
-            Block blockBelow = player.getLocation().subtract(0, 0.2, 0).getBlock();
-            Location belowLoc = blockBelow.getLocation();
+        // Détection d'atterrissage : isOnGround() est client-side et peu fiable,
+        // on vérifie directement le bloc sous les pieds à chaque mouvement.
+        // isLastLandedBlock + isNewBlock empêchent le double-comptage.
+        Block blockBelow = player.getLocation().subtract(0, 0.2, 0).getBlock();
+        Location belowLoc = blockBelow.getLocation();
 
-            if (session.isParkourBlock(belowLoc) && session.isNewBlock(belowLoc) && !session.isLastLandedBlock(belowLoc)) {
-                plugin.getParkourManager().onPlayerLand(player, session, belowLoc);
-            }
+        if (session.isParkourBlock(belowLoc) && session.isNewBlock(belowLoc) && !session.isLastLandedBlock(belowLoc)) {
+            plugin.getParkourManager().onPlayerLand(player, session, belowLoc);
         }
     }
 
