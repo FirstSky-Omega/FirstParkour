@@ -115,16 +115,20 @@ public class BlockGenerator {
         DifficultyConfig cfg = diffConfigs.get(session.getDifficulty());
         if (cfg == null) return null;
 
-        int distance = cfg.minDist() + random.nextInt(cfg.maxDist() - cfg.minDist() + 1);
+        int dy = cfg.minH() + random.nextInt(cfg.maxH() - cfg.minH() + 1);
+
+        // En montée, limiter la distance horizontale à minDist pour que le saut reste faisable
+        // (sprint-jump à +1 bloc : max ~2 blocs horizontaux en Minecraft)
+        int effectiveDist = (dy > 0) ? cfg.minDist() : cfg.minDist() + random.nextInt(cfg.maxDist() - cfg.minDist() + 1);
 
         double deviation = (random.nextDouble() * 2.0 - 1.0) * Math.toRadians(cfg.spread());
         double newAngle = session.getCurrentAngle() + deviation;
         session.setCurrentAngle(newAngle);
 
-        int dx = (int) Math.round(Math.sin(newAngle) * distance);
-        int dz = (int) Math.round(Math.cos(newAngle) * distance);
+        int dx = (int) Math.round(Math.sin(newAngle) * effectiveDist);
+        int dz = (int) Math.round(Math.cos(newAngle) * effectiveDist);
         if (Math.abs(dx) + Math.abs(dz) < 2) {
-            if (dx == 0 && dz == 0) dz = distance;
+            if (dx == 0 && dz == 0) dz = effectiveDist;
         }
 
         // Si le bloc candidat tombe dans la zone lobby, on réoriente loin du centre
@@ -133,13 +137,11 @@ public class BlockGenerator {
                     last.getBlockX() - lobbyZone.cx(),
                     last.getBlockZ() - lobbyZone.cz());
             newAngle = awayAngle + (random.nextDouble() * 2.0 - 1.0) * Math.toRadians(cfg.spread() * 0.5);
-            dx = (int) Math.round(Math.sin(newAngle) * distance);
-            dz = (int) Math.round(Math.cos(newAngle) * distance);
-            if (Math.abs(dx) + Math.abs(dz) < 2) dz = distance;
+            dx = (int) Math.round(Math.sin(newAngle) * effectiveDist);
+            dz = (int) Math.round(Math.cos(newAngle) * effectiveDist);
+            if (Math.abs(dx) + Math.abs(dz) < 2) dz = effectiveDist;
             session.setCurrentAngle(newAngle);
         }
-
-        int dy = cfg.minH() + random.nextInt(cfg.maxH() - cfg.minH() + 1);
         int newY = last.getBlockY() + dy;
         int minWorld = last.getWorld().getMinHeight() + 5;
         int maxWorld = last.getWorld().getMaxHeight() - 5;
