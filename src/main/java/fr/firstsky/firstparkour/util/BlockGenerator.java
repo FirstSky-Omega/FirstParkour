@@ -60,10 +60,10 @@ public class BlockGenerator {
             diffMaterials.put(d, parseMaterials(sec.getStringList("blocks")));
         }
 
-        boolean zoneEnabled = plugin.getConfig().getBoolean("parkour.lobby-zone.enabled", false);
+        boolean zoneEnabled = plugin.getConfig().getBoolean("parkour.lobby-zone.enabled", true);
         int cx   = plugin.getConfig().getInt("parkour.lobby-zone.center-x", 0);
         int cz   = plugin.getConfig().getInt("parkour.lobby-zone.center-z", 0);
-        int half = plugin.getConfig().getInt("parkour.lobby-zone.half-size", 100);
+        int half = plugin.getConfig().getInt("parkour.lobby-zone.half-size", 200);
         lobbyZone = new LobbyZone(zoneEnabled, cx, cz, half);
 
         for (BlockTheme t : BlockTheme.values()) {

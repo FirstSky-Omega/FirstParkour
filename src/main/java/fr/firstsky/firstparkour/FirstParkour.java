@@ -36,6 +36,9 @@ public class FirstParkour extends JavaPlugin {
     public void onEnable() {
         instance = this;
         saveDefaultConfig();
+        // Merge any missing keys from the bundled config.yml into the disk file
+        getConfig().options().copyDefaults(true);
+        saveConfig();
 
         databaseManager = new DatabaseManager(this);
         databaseManager.init();
