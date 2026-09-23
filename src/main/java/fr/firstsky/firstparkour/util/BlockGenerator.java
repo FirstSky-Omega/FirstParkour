@@ -95,12 +95,15 @@ public class BlockGenerator {
         int x = lobbyZone.cx() + (int) Math.round(Math.sin(angle) * dist);
         int z = lobbyZone.cz() + (int) Math.round(Math.cos(angle) * dist);
         World world = origin.getWorld();
-        // Use actual surface height so the player doesn't land inside terrain
         int y = origin.getBlockY() - 1;
         if (world != null) {
             int surface = world.getHighestBlockYAt(x, z);
-            // In a void world getHighestBlockYAt returns minHeight; keep origin Y in that case
-            if (surface > world.getMinHeight()) y = surface;
+            // In a void world getHighestBlockYAt returns minHeight — keep origin Y
+            // In a terrain/tree world start 10 blocks above the surface so
+            // all generated blocks are above the canopy and never hidden inside trees
+            if (surface > world.getMinHeight()) {
+                y = Math.max(y, surface + 10);
+            }
         }
         return new Location(world, x, y, z);
     }
