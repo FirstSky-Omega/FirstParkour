@@ -313,13 +313,13 @@ public class ParkourManager {
                         + plugin.getConfig().getString("messages.fall", "&cTombé ! Score: &6{score}")
                         .replace("{score}", String.valueOf(score));
                 String subtitle = isNewRecord
-                        ? MessageUtil.color(plugin.getConfig()
+                        ? plugin.getConfig()
                                 .getString("messages.new-record", "&6✦ NOUVEAU RECORD !")
-                                .replace("{score}", String.valueOf(score)))
+                                .replace("{score}", String.valueOf(score))
                         : "&7Score: &6" + score;
                 FoliaUtil.runForEntity(plugin, player, () -> {
                     MessageUtil.send(player, fallMsg);
-                    MessageUtil.sendTitle(player, "&c✗", subtitle, 5, 60, 15);
+                    MessageUtil.sendTitle(player, "&#FF4757✗", subtitle, 5, 60, 15);
                 });
             }
         }
