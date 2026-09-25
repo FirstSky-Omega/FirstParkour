@@ -50,9 +50,11 @@ public class ParkourManager {
 
     public void unloadPlayer(Player player) {
         savedLocations.remove(player.getUniqueId());
+        boolean hadSession = isPlaying(player);
         stopSession(player, false);
         PlayerData data = playerDataCache.remove(player.getUniqueId());
-        if (data != null) {
+        // stopSession a déjà sauvegardé si le joueur avait une session active
+        if (data != null && !hadSession) {
             FoliaUtil.runAsync(plugin, () -> plugin.getDatabaseManager().savePlayer(data));
         }
     }

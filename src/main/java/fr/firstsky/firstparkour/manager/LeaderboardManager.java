@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class LeaderboardManager {
@@ -27,11 +28,16 @@ public class LeaderboardManager {
     }
 
     private void refreshAll() {
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
         for (Difficulty d : Difficulty.values()) {
-            List<PlayerData> top = plugin.getDatabaseManager().getLeaderboard(d, 10);
-            cache.put(d, top);
+            futures.add(CompletableFuture.runAsync(() -> {
+                List<PlayerData> top = plugin.getDatabaseManager().getLeaderboard(d, 10);
+                cache.put(d, top);
+            }));
         }
-        globalCache = plugin.getDatabaseManager().getGlobalLeaderboard(100);
+        futures.add(CompletableFuture.runAsync(() ->
+                globalCache = plugin.getDatabaseManager().getGlobalLeaderboard(100)));
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
     }
 
     public List<PlayerData> getTop(Difficulty difficulty) {

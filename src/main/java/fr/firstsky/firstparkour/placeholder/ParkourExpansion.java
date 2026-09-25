@@ -9,6 +9,9 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.EnumMap;
+import java.util.Map;
+
 /**
  * Placeholders disponibles :
  *
@@ -38,9 +41,19 @@ import org.jetbrains.annotations.Nullable;
 public class ParkourExpansion extends PlaceholderExpansion {
 
     private final FirstParkour plugin;
+    private final Map<Difficulty, String> displayNames = new EnumMap<>(Difficulty.class);
 
     public ParkourExpansion(FirstParkour plugin) {
         this.plugin = plugin;
+        reloadDisplayNames();
+    }
+
+    public void reloadDisplayNames() {
+        displayNames.clear();
+        for (Difficulty d : Difficulty.values()) {
+            displayNames.put(d, plugin.getConfig().getString(
+                    "difficulties." + d.getKey() + ".display-name", d.getKey()));
+        }
     }
 
     @Override
@@ -74,9 +87,7 @@ public class ParkourExpansion extends PlaceholderExpansion {
         if (params.equals("difficulty")) {
             ParkourSession s = plugin.getParkourManager().getSession(player);
             if (s == null) return "—";
-            return plugin.getConfig().getString(
-                    "difficulties." + s.getDifficulty().getKey() + ".display-name",
-                    s.getDifficulty().getKey());
+            return displayNames.getOrDefault(s.getDifficulty(), s.getDifficulty().getKey());
         }
 
         // Total sauts
@@ -159,7 +170,7 @@ public class ParkourExpansion extends PlaceholderExpansion {
         }
         if (params.equals("daily_difficulty")) {
             var d = plugin.getDailyChallengeManager().getTodayDifficulty();
-            return plugin.getConfig().getString("difficulties." + d.getKey() + ".display-name", d.getKey());
+            return displayNames.getOrDefault(d, d.getKey());
         }
         // top du défi : daily_top_1_name / daily_top_1_score
         if (params.startsWith("daily_top_")) {

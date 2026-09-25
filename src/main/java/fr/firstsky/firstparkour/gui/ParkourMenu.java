@@ -12,6 +12,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -19,13 +20,18 @@ import java.util.List;
 
 public class ParkourMenu implements Listener {
 
+    private static final class Holder implements InventoryHolder {
+        @Override public Inventory getInventory() { return null; }
+    }
+    private static final Holder HOLDER = new Holder();
+
     private final FirstParkour plugin;
 
-    // Titre brut (avant colorisation) — utilisé aussi pour identifier le menu
     static final String MENU_TITLE_KEY = "gui.title";
     static final String DEFAULT_TITLE  = "&8✦ &6FirstParkour &8✦";
 
     private String cachedTitle;
+    private int cachedRows;
     private int slotEasy, slotMedium, slotHard, slotThemes, slotStats, slotClose, slotGlobal, slotDaily;
 
     public ParkourMenu(FirstParkour plugin) {
@@ -36,6 +42,7 @@ public class ParkourMenu implements Listener {
     /** Appelé à l'init et sur /parkour recharger. */
     public void reloadCache() {
         cachedTitle = MessageUtil.color(plugin.getConfig().getString(MENU_TITLE_KEY, DEFAULT_TITLE));
+        cachedRows  = plugin.getConfig().getInt("gui.rows", 3);
         slotEasy    = plugin.getConfig().getInt("gui.easy-slot",    11);
         slotMedium  = plugin.getConfig().getInt("gui.medium-slot",  13);
         slotHard    = plugin.getConfig().getInt("gui.hard-slot",    15);
@@ -47,8 +54,7 @@ public class ParkourMenu implements Listener {
     }
 
     public void open(Player player) {
-        int rows = plugin.getConfig().getInt("gui.rows", 3);
-        Inventory inv = Bukkit.createInventory(null, rows * 9, cachedTitle);
+        Inventory inv = Bukkit.createInventory(HOLDER, cachedRows * 9, cachedTitle);
 
         PlayerData data = plugin.getParkourManager().getPlayerData(player.getUniqueId());
 
@@ -149,7 +155,7 @@ public class ParkourMenu implements Listener {
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
         if (event.getCurrentItem() == null) return;
-        if (!event.getView().getTitle().equals(cachedTitle)) return;
+        if (!(event.getInventory().getHolder() instanceof Holder)) return;
 
         event.setCancelled(true);
         int slot = event.getSlot();

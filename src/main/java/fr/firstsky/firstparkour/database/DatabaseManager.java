@@ -30,7 +30,7 @@ public class DatabaseManager {
         int port = plugin.getConfig().getInt("mysql.port", 3306);
         String db = plugin.getConfig().getString("mysql.database", "firstparkour");
         cfg.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + db
-                + "?useSSL=false&autoReconnect=true&characterEncoding=utf8");
+                + "?useSSL=false&autoReconnect=true&characterEncoding=utf8mb4");
         cfg.setUsername(plugin.getConfig().getString("mysql.username", "root"));
         cfg.setPassword(plugin.getConfig().getString("mysql.password", ""));
         cfg.setMaximumPoolSize(plugin.getConfig().getInt("mysql.pool-size", 10));
@@ -38,6 +38,11 @@ public class DatabaseManager {
         cfg.setConnectionTimeout(10_000);
         cfg.setPoolName("FirstParkour-Pool");
         cfg.setDriverClassName("fr.firstsky.firstparkour.libs.mysql.cj.jdbc.Driver");
+        cfg.addDataSourceProperty("cachePrepStmts", "true");
+        cfg.addDataSourceProperty("useServerPrepStmts", "true");
+        cfg.addDataSourceProperty("prepStmtCacheSize", "250");
+        cfg.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+        cfg.addDataSourceProperty("rewriteBatchedStatements", "true");
 
         dataSource = new HikariDataSource(cfg);
         createTables();
@@ -93,7 +98,7 @@ public class DatabaseManager {
     public PlayerData loadPlayer(UUID uuid, String name) {
         try (Connection c = dataSource.getConnection();
              PreparedStatement ps = c.prepareStatement(
-                     "SELECT * FROM firstparkour_players WHERE uuid = ?")) {
+                     "SELECT uuid,name,best_score_easy,best_score_medium,best_score_hard,total_jumps,theme FROM firstparkour_players WHERE uuid = ?")) {
             ps.setString(1, uuid.toString());
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
@@ -149,7 +154,7 @@ public class DatabaseManager {
     /** Classement global : trié par GREATEST(easy, medium, hard) DESC */
     public List<PlayerData> getGlobalLeaderboard(int limit) {
         List<PlayerData> list = new ArrayList<>();
-        String sql = "SELECT * FROM firstparkour_players " +
+        String sql = "SELECT uuid,name,best_score_easy,best_score_medium,best_score_hard,total_jumps,theme FROM firstparkour_players " +
                      "ORDER BY GREATEST(best_score_easy, best_score_medium, best_score_hard) DESC LIMIT ?";
         try (Connection c = dataSource.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
@@ -177,7 +182,7 @@ public class DatabaseManager {
         List<PlayerData> list = new ArrayList<>();
         try (Connection c = dataSource.getConnection();
              PreparedStatement ps = c.prepareStatement(
-                     "SELECT * FROM firstparkour_players ORDER BY " + col + " DESC LIMIT ?")) {
+                     "SELECT uuid,name,best_score_easy,best_score_medium,best_score_hard,total_jumps,theme FROM firstparkour_players ORDER BY " + col + " DESC LIMIT ?")) {
             ps.setInt(1, limit);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {

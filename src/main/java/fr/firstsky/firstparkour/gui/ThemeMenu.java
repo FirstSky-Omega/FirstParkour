@@ -12,12 +12,18 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class ThemeMenu implements Listener {
+
+    private static final class Holder implements InventoryHolder {
+        @Override public Inventory getInventory() { return null; }
+    }
+    private static final Holder HOLDER = new Holder();
 
     private final FirstParkour plugin;
 
@@ -45,7 +51,7 @@ public class ThemeMenu implements Listener {
 
     public void open(Player player) {
         String rawTitle = themeTitle();
-        Inventory inv = Bukkit.createInventory(null, 27, MessageUtil.color(rawTitle));
+        Inventory inv = Bukkit.createInventory(HOLDER, 27, MessageUtil.color(rawTitle));
 
         PlayerData data = plugin.getParkourManager().getPlayerData(player.getUniqueId());
         BlockTheme current = data != null ? data.getTheme() : BlockTheme.DEFAULT;
@@ -90,7 +96,7 @@ public class ThemeMenu implements Listener {
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player player)) return;
         if (event.getCurrentItem() == null) return;
-        if (!event.getView().getTitle().equals(MessageUtil.color(themeTitle()))) return;
+        if (!(event.getInventory().getHolder() instanceof Holder)) return;
 
         event.setCancelled(true);
         int slot = event.getSlot();
