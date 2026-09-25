@@ -30,7 +30,7 @@ public class DatabaseManager {
         int port = plugin.getConfig().getInt("mysql.port", 3306);
         String db = plugin.getConfig().getString("mysql.database", "firstparkour");
         cfg.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + db
-                + "?useSSL=false&autoReconnect=true&characterEncoding=utf8mb4");
+                + "?useSSL=false&autoReconnect=true&characterEncoding=utf8");
         cfg.setUsername(plugin.getConfig().getString("mysql.username", "root"));
         cfg.setPassword(plugin.getConfig().getString("mysql.password", ""));
         cfg.setMaximumPoolSize(plugin.getConfig().getInt("mysql.pool-size", 10));
