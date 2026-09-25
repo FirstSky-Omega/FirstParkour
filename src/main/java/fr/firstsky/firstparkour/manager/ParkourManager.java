@@ -263,10 +263,7 @@ public class ParkourManager {
         if (data != null) {
             data.updateBestScore(session.getDifficulty(), session.getScore());
             data.addJumps(session.getScore());
-            FoliaUtil.runAsync(plugin, () -> {
-                plugin.getDatabaseManager().savePlayer(data);
-                plugin.getLeaderboardManager().forceRefresh();
-            });
+            FoliaUtil.runAsync(plugin, () -> plugin.getDatabaseManager().savePlayer(data));
         }
 
         if (sendMessage) {

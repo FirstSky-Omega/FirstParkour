@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class BlockGenerator {
 
@@ -27,7 +27,7 @@ public class BlockGenerator {
     }
 
     private final FirstParkour plugin;
-    private final Random random = new Random();
+    // ThreadLocalRandom : thread-safe sous Folia (régions parallèles)
 
     /** Config de génération pré-calculée par difficulté */
     private final Map<Difficulty, DifficultyConfig> diffConfigs = new EnumMap<>(Difficulty.class);
@@ -95,18 +95,10 @@ public class BlockGenerator {
         double dist = lobbyZone.half() + 5.0;
         int x = lobbyZone.cx() + (int) Math.round(Math.sin(angle) * dist);
         int z = lobbyZone.cz() + (int) Math.round(Math.cos(angle) * dist);
-        World world = origin.getWorld();
-        int y = origin.getBlockY() - 1;
-        if (world != null) {
-            int surface = world.getHighestBlockYAt(x, z);
-            // In a void world getHighestBlockYAt returns minHeight — keep origin Y
-            // In a terrain/tree world start 10 blocks above the surface so
-            // all generated blocks are above the canopy and never hidden inside trees
-            if (surface > world.getMinHeight()) {
-                y = Math.max(y, surface + 10);
-            }
-        }
-        return new Location(world, x, y, z);
+        // Ne pas appeler getHighestBlockYAt ici : (x,z) est dans une région Folia
+        // différente de celle du joueur, l'appel serait sur le mauvais thread.
+        // Le spawn doit être configuré à une hauteur correcte par /parkour definirespawn.
+        return new Location(origin.getWorld(), x, origin.getBlockY() - 1, z);
     }
 
     public Location generateNext(ParkourSession session) {
@@ -116,13 +108,15 @@ public class BlockGenerator {
         DifficultyConfig cfg = diffConfigs.get(session.getDifficulty());
         if (cfg == null) return null;
 
-        int dy = cfg.minH() + random.nextInt(cfg.maxH() - cfg.minH() + 1);
+        ThreadLocalRandom rng = ThreadLocalRandom.current();
+
+        int dy = cfg.minH() + rng.nextInt(cfg.maxH() - cfg.minH() + 1);
 
         // En montée, limiter la distance horizontale à minDist pour que le saut reste faisable
         // (sprint-jump à +1 bloc : max ~2 blocs horizontaux en Minecraft)
-        int effectiveDist = (dy > 0) ? cfg.minDist() : cfg.minDist() + random.nextInt(cfg.maxDist() - cfg.minDist() + 1);
+        int effectiveDist = (dy > 0) ? cfg.minDist() : cfg.minDist() + rng.nextInt(cfg.maxDist() - cfg.minDist() + 1);
 
-        double deviation = (random.nextDouble() * 2.0 - 1.0) * Math.toRadians(cfg.spread());
+        double deviation = (rng.nextDouble() * 2.0 - 1.0) * Math.toRadians(cfg.spread());
         double newAngle = session.getCurrentAngle() + deviation;
         session.setCurrentAngle(newAngle);
 
@@ -137,7 +131,7 @@ public class BlockGenerator {
             double awayAngle = Math.atan2(
                     last.getBlockX() - lobbyZone.cx(),
                     last.getBlockZ() - lobbyZone.cz());
-            newAngle = awayAngle + (random.nextDouble() * 2.0 - 1.0) * Math.toRadians(cfg.spread() * 0.5);
+            newAngle = awayAngle + (rng.nextDouble() * 2.0 - 1.0) * Math.toRadians(cfg.spread() * 0.5);
             dx = (int) Math.round(Math.sin(newAngle) * effectiveDist);
             dz = (int) Math.round(Math.cos(newAngle) * effectiveDist);
             if (Math.abs(dx) + Math.abs(dz) < 2) dz = effectiveDist;
@@ -155,11 +149,11 @@ public class BlockGenerator {
     public Material getRandomMaterial(Difficulty difficulty, BlockTheme theme) {
         if (theme != null && theme != BlockTheme.DEFAULT) {
             Material[] mats = themeMaterials.get(theme);
-            if (mats != null && mats.length > 0) return mats[random.nextInt(mats.length)];
+            if (mats != null && mats.length > 0) return mats[ThreadLocalRandom.current().nextInt(mats.length)];
         }
         Material[] mats = diffMaterials.get(difficulty);
         if (mats == null || mats.length == 0) return Material.STONE;
-        return mats[random.nextInt(mats.length)];
+        return mats[ThreadLocalRandom.current().nextInt(mats.length)];
     }
 
     private static Material[] parseMaterials(List<String> names) {

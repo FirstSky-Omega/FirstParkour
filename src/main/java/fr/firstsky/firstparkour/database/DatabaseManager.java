@@ -127,7 +127,7 @@ public class DatabaseManager {
                 best_score_easy   = GREATEST(best_score_easy,   VALUES(best_score_easy)),
                 best_score_medium = GREATEST(best_score_medium, VALUES(best_score_medium)),
                 best_score_hard   = GREATEST(best_score_hard,   VALUES(best_score_hard)),
-                total_jumps = total_jumps + VALUES(total_jumps),
+                total_jumps = VALUES(total_jumps),
                 theme = VALUES(theme),
                 last_played = CURRENT_TIMESTAMP
         """;
