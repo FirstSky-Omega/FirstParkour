@@ -40,7 +40,7 @@ parkour:
     enabled: true
     center-x: 0
     center-z: 0
-    half-size: 100
+    half-size: 200
 
 difficulties:
   easy:
@@ -93,40 +93,40 @@ difficulties:
 
 messages:
   prefix: '&#07B9FB&lF&#08ADFC&li&#09A2FC&lr&#0A96FD&ls&#0C8BFD&lt&#0D7FFE&lS&#0E74FE&lk&#0F68FF&ly &f&l» '
-  start: '&aParkour &6{difficulty} &adémarré ! Bonne chance !'
-  stop: '&cParkour arrêté. Score final: &6{score} &cblocs.'
-  new-record: '&6✦ NOUVEAU RECORD ! &e{score} &6blocs !'
-  no-permission: '&cVous n''avez pas la permission.'
-  already-playing: '&cVous jouez déjà ! Faites &e/parkour stop &cpour arrêter.'
-  not-playing: '&cVous ne jouez pas au parkour.'
-  spawn-set: '&aSpawn du parkour défini ici (monde: &e{world}&a).'
-  world-not-found: '&cMonde de parkour &e{world} &cintrouvable ! Vérifiez la config.'
-  reload: '&aConfiguration rechargée.'
-  score-actionbar: '&6Score: &e{score} &7| &6Record: &e{best}'
-  fall: '&cVous êtes tombé ! Score final: &6{score} &cblocs.'
+  start: '&#00DFFF⚡ &fParkour {difficulty} &#A8FF78démarré &f! &#7CFC00Bonne chance !'
+  stop: '&#7A8C99✦ &fParkour arrêté &7— &fScore &7: &#FFD700{score} &#7A8C99blocs.'
+  new-record: '&#FFD700★ &#FFC200NOUVEAU &#FFA500RECORD &#FF8C00! &#FFD700{score} &#FFA500blocs !'
+  no-permission: '&#FF4757✖ &cTu n''as pas la permission d''utiliser cette commande.'
+  already-playing: '&#FFB347⚠ &eTu joues déjà ! Fais &#FFD700/parkour stop &epour arrêter.'
+  not-playing: '&#FF6B35✖ &cTu ne joues pas au parkour.'
+  spawn-set: '&#00FF87✔ &#7CFC00Spawn défini ici &#00E5FF(monde : &#7DFFB3{world}&#00E5FF)&#7CFC00.'
+  world-not-found: '&#FF4757✖ &#FF6B81Monde &#FFD700{world} &#FF6B81introuvable ! Vérifie la config.'
+  reload: '&#00E5FF⟳ &#7DFFB3Configuration rechargée.'
+  score-actionbar: '&#07B9FB⚡ &fScore &7: &#FFD700{score} &8| &fRecord &7: &#FFA500{best}'
+  fall: '&#FF4757✦ &#FF6B81Tu es tombé ! &fScore final &7: &#FFD700{score} &#FF6B81blocs.'
 
-  top-header: '&8&m------&r &6Classement Parkour &7({difficulty}) &8&m------'
-  top-line: '&7#{rank} &e{name} &7- &6{score} blocs'
-  top-empty: '&7Aucun score enregistré.'
+  top-header: '&#FFD700★ &#FFC200Classement &#FFD700{difficulty} &#FFC200★'
+  top-line: '  &#FFD700&l#{rank} &f{name} &#7A8C99— &#FFA500{score} &6blocs'
+  top-empty: '  &#7A8C99Aucun score enregistré pour le moment.'
 
-  stats-header: '&8&m------&r &6Vos Stats &8&m------'
-  stats-easy: '  &7Facile: &a{score}'
-  stats-medium: '  &7Normal: &e{score}'
-  stats-hard: '  &7Difficile: &c{score}'
-  stats-jumps: '  &7Total sauts: &6{jumps}'
+  stats-header: '&#07B9FB◈ &fVos Stats &#07B9FB◈'
+  stats-easy: '  &#A8FF78Facile &7: &a{score}'
+  stats-medium: '  &#FFD700Normal &7: &e{score}'
+  stats-hard: '  &#FF6B81Difficile &7: &c{score}'
+  stats-jumps: '  &#07B9FBTotal sauts &7: &f{jumps}'
 
   # Worlds
-  world-unloaded: '&cLe monde de parkour a été déchargé. Session arrêtée.'
+  world-unloaded: '&#FFB347⚠ &eLe monde de parkour a été déchargé. Session arrêtée.'
 
   # Duel
-  duel-reconnect: '&aReconnecté ! Score restauré: &6{score}'
-  duel-opponent-disconnected: '&e{player} &7s''est déconnecté. &c{seconds}s &7pour reconnecter.'
-  duel-opponent-reconnected: '&e{player} &7a reconnecté au duel !'
-  duel-win-by-dc: '&a✔ Victoire ! Votre adversaire s''est déconnecté. Score: &6{score}'
+  duel-reconnect: '&#00FF87✔ &#7CFC00Reconnecté ! Score restauré &7: &#FFD700{score}'
+  duel-opponent-disconnected: '&#FFB347⚠ &#FFD700{player} &es''est déconnecté. &#FF6B35{seconds}s &epour reconnecter.'
+  duel-opponent-reconnected: '&#00FF87✔ &#FFD700{player} &aa reconnecté au duel !'
+  duel-win-by-dc: '&#FFD700★ &#FFC200Victoire ! &eL''adversaire s''est déconnecté. &fScore &7: &#FFD700{score}'
 
   # Spectateur
-  spectator-join: '&7Vous regardez le duel de &e{player1} &7vs &e{player2}&7.'
-  spectator-quit: '&7Vous avez quitté le mode spectateur.'
+  spectator-join: '&#7A8C99◎ &7Tu regardes le duel de &#07B9FB{player1} &7vs &#0F68FF{player2}&7.'
+  spectator-quit: '&#7A8C99◎ &7Tu as quitté le mode spectateur.'
 
 themes:
   nether:
