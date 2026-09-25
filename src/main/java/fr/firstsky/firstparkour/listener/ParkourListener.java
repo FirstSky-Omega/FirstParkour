@@ -101,7 +101,11 @@ public class ParkourListener implements Listener {
     public void onPlayerRespawn(PlayerRespawnEvent event) {
         var player = event.getPlayer();
         if (plugin.getParkourManager().isPlaying(player)) {
-            plugin.getParkourManager().stopSession(player, false);
+            // Utilise le spawn parkour si configuré, sinon retour à l'origine
+            var spawn = plugin.getParkourManager().getParkourSpawnSilent();
+            plugin.getParkourManager().stopSession(player, false, spawn);
+            // setRespawnLocation garantit le TP synchrone, avant le teleportAsync de stopSession
+            if (spawn != null) event.setRespawnLocation(spawn);
             String msg = plugin.getConfig().getString("messages.prefix", "") + "&cParkour arrêté suite à une mort.";
             MessageUtil.send(player, msg);
         }

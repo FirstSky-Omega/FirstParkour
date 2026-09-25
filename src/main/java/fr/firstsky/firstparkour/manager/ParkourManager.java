@@ -376,7 +376,7 @@ public class ParkourManager {
     }
 
     /** Retourne le spawn du monde parkour configuré sans envoyer de message, ou null. */
-    private Location getParkourSpawnSilent() {
+    public Location getParkourSpawnSilent() {
         String worldName = plugin.getConfig().getString("parkour.world", "");
         if (worldName == null || worldName.isBlank()) return null;
         World world = plugin.getServer().getWorld(worldName);
