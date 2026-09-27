@@ -28,7 +28,6 @@ public class ParkourManager {
     private final FirstParkour plugin;
     private final BlockGenerator generator;
     private final Map<UUID, ParkourSession> sessions = new ConcurrentHashMap<>();
-    private final Map<UUID, GameMode>  previousGameModes  = new ConcurrentHashMap<>();
     private final Map<UUID, Location>  savedLocations     = new ConcurrentHashMap<>();
     private final Map<UUID, PlayerData> playerDataCache   = new ConcurrentHashMap<>();
 
@@ -90,9 +89,7 @@ public class ParkourManager {
             return;
         }
 
-        // Sauvegarde gamemode avant de changer
         if (plugin.getConfig().getBoolean("parkour.force-adventure", true)) {
-            previousGameModes.put(player.getUniqueId(), player.getGameMode());
             FoliaUtil.runForEntity(plugin, player, () -> player.setGameMode(GameMode.ADVENTURE));
         }
 
@@ -247,10 +244,9 @@ public class ParkourManager {
             });
         }
 
-        // Restaure le gamemode
-        GameMode prev = previousGameModes.remove(player.getUniqueId());
-        if (prev != null) {
-            FoliaUtil.runForEntity(plugin, player, () -> player.setGameMode(prev));
+        // Remet le joueur en survie en quittant le parcours
+        if (plugin.getConfig().getBoolean("parkour.force-adventure", true)) {
+            FoliaUtil.runForEntity(plugin, player, () -> player.setGameMode(GameMode.SURVIVAL));
         }
 
         // Téléporte vers la destination (spawn parkour si chute, origine sinon)
@@ -436,7 +432,6 @@ public class ParkourManager {
 
     private void doRestore(Player player, Difficulty difficulty, PlayerData data, int savedScore) {
         if (plugin.getConfig().getBoolean("parkour.force-adventure", true)) {
-            previousGameModes.put(player.getUniqueId(), player.getGameMode());
             FoliaUtil.runForEntity(plugin, player, () -> player.setGameMode(GameMode.ADVENTURE));
         }
         Location parkourSpawn = getParkourSpawn(player);

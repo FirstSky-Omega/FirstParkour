@@ -25,7 +25,7 @@ parkour:
   blocks-ahead: 3
   # Nombre de blocs conservés derrière le joueur
   history-size: 12
-  # Mettre le joueur en mode ADVENTURE pendant le parkour
+  # Mettre le joueur en mode ADVENTURE pendant le parkour (remis en SURVIVAL en quittant)
   force-adventure: true
   # Désactiver les dégâts pendant le parkour
   disable-damage: true
