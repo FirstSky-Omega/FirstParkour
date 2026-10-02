@@ -245,16 +245,20 @@ public class ParkourManager {
             });
         }
 
-        // Remet le joueur en survie en quittant le parcours
-        if (plugin.getConfig().getBoolean("parkour.force-adventure", true)) {
-            FoliaUtil.runForEntity(plugin, player, () -> player.setGameMode(GameMode.SURVIVAL));
-        }
-
         // Téléporte vers la destination (spawn parkour si chute, origine sinon)
+        // Le restore de gamemode est toujours exécuté dans le callback du TP
+        // pour éviter la race condition : si le joueur mourrait avant l'exécution
+        // du task entity-scheduler, il resterait en ADVENTURE après respawn.
+        final boolean restoreGamemode = plugin.getConfig().getBoolean("parkour.force-adventure", true);
         Location origin = savedLocations.remove(player.getUniqueId());
         Location dest = destination != null ? destination : origin;
         if (dest != null) {
-            FoliaUtil.teleport(plugin, player, dest, null);
+            FoliaUtil.teleport(plugin, player, dest, () -> {
+                if (restoreGamemode) player.setGameMode(GameMode.SURVIVAL);
+            });
+        } else if (restoreGamemode) {
+            // Pas de TP : restore direct sur le thread courant (on est sur le bon thread)
+            FoliaUtil.runForEntity(plugin, player, () -> player.setGameMode(GameMode.SURVIVAL));
         }
 
         // Sauvegarde le score

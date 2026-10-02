@@ -63,9 +63,11 @@ public class BlockGenerator {
         int cx   = plugin.getConfig().getInt("parkour.lobby-zone.center-x", 0);
         int cz   = plugin.getConfig().getInt("parkour.lobby-zone.center-z", 0);
         int half = plugin.getConfig().getInt("parkour.lobby-zone.half-size", 200);
-        // Active dès que half-size > 0, indépendamment de la clé "enabled"
-        // (évite que saveConfig() écrase la valeur en false)
-        lobbyZone = new LobbyZone(half > 0, cx, cz, half);
+        // La zone lobby ne s'applique que si un monde dédié est configuré.
+        // Sans monde dédié, le parkour se génère sur l'île du joueur qui peut être
+        // dans la zone : la restriction provoquerait des blocs générés à 200+ blocs.
+        boolean hasWorld = !plugin.getConfig().getString("parkour.world", "").isBlank();
+        lobbyZone = new LobbyZone(hasWorld && half > 0, cx, cz, half);
 
         for (BlockTheme t : BlockTheme.values()) {
             if (t == BlockTheme.DEFAULT) continue;
