@@ -109,7 +109,8 @@ public class ParkourManager {
             FoliaUtil.teleport(plugin, player, destination,
                     () -> initSession(player, difficulty, data));
         } else {
-            // Aucun monde configuré : démarrage sur place
+            // Aucun monde configuré : démarrage sur place, mais on sauvegarde quand même l'origine
+            savedLocations.put(player.getUniqueId(), player.getLocation().clone());
             initSession(player, difficulty, data);
         }
     }
@@ -441,6 +442,7 @@ public class ParkourManager {
             FoliaUtil.teleport(plugin, player, destination,
                     () -> initRestoredSession(player, difficulty, data, savedScore));
         } else {
+            savedLocations.put(player.getUniqueId(), player.getLocation().clone());
             initRestoredSession(player, difficulty, data, savedScore);
         }
     }
