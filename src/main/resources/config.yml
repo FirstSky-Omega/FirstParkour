@@ -65,7 +65,7 @@ difficulties:
     min-distance: 2
     max-distance: 4
     min-height: -1
-    max-height: 2
+    max-height: 1
     angle-spread: 40.0
     blocks:
       - STONE
@@ -81,7 +81,7 @@ difficulties:
     min-distance: 3
     max-distance: 5
     min-height: -2
-    max-height: 2
+    max-height: 1
     angle-spread: 55.0
     blocks:
       - OBSIDIAN
